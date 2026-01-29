@@ -34,6 +34,9 @@ export default function ProfileModal({ profile, onClose, onMessage }) {
 
                         <div className="flex-1 mb-2">
                             <h2 className="text-2xl font-bold text-gray-900">{profile.name}</h2>
+                            <div className="text-xs text-gray-500 font-mono mt-0.5">
+                                ID: {profile.originalId || profile.id}
+                            </div>
                             <div className="flex items-center justify-center sm:justify-start gap-2 text-gray-600 mt-1">
                                 {profile.specialization && (
                                     <span className="bg-teal-50 text-teal-700 text-xs px-2 py-1 rounded-full font-medium uppercase tracking-wide">
@@ -54,15 +57,26 @@ export default function ProfileModal({ profile, onClose, onMessage }) {
                             </div>
                         </div>
 
-                        <button
-                            onClick={() => {
-                                onClose();
-                                onMessage(profile);
-                            }}
-                            className="bg-teal-700 hover:bg-teal-800 text-white px-6 py-2 rounded-lg font-medium shadow-sm transition-colors"
-                        >
-                            Message
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <button
+                                onClick={() => {
+                                    onClose();
+                                    onMessage(profile);
+                                }}
+                                className="bg-teal-700 hover:bg-teal-800 text-white px-6 py-2 rounded-lg font-medium shadow-sm transition-colors text-sm"
+                            >
+                                Message
+                            </button>
+                            <button
+                                onClick={() => {
+                                    onClose();
+                                    profile.onBookAppointment && profile.onBookAppointment(profile);
+                                }}
+                                className="bg-[#FDB415] hover:bg-[#eaa512] text-[#234f4a] px-6 py-2 rounded-lg font-bold shadow-sm transition-colors text-sm"
+                            >
+                                Book Appointment
+                            </button>
+                        </div>
                     </div>
 
                     {/* Details Grid */}

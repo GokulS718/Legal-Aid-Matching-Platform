@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface CaseRepository extends JpaRepository<Case, Long> {
     
     List<Case> findByCitizenIdOrderByUpdatedAtDesc(Integer citizenId);
+
+    List<Case> findByIdIn(List<Long> ids);
     
     Optional<Case> findFirstByCitizenIdAndIsSubmittedFalseOrderByUpdatedAtDesc(Integer citizenId);
     

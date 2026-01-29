@@ -52,7 +52,7 @@ class GeocodingResponse {
  */
 @RestController
 @RequestMapping("/api/geocoding")
-@CrossOrigin(origins = "http://localhost:5173")
+
 public class GeocodingController {
 
     private final RestTemplate restTemplate;

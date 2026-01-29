@@ -12,4 +12,7 @@ public interface ChatSessionRepository extends JpaRepository<ChatSession, Long> 
 
     Optional<ChatSession> findByCaseIdAndCitizenIdAndProviderIdAndProviderRole(Long caseId, Integer citizenId,
             Integer providerId, String providerRole);
+
+    Optional<ChatSession> findByCitizenIdAndProviderIdAndProviderRoleAndCaseIdIsNull(Integer citizenId,
+            Integer providerId, String providerRole);
 }

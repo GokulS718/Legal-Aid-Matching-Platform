@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser, clearError } from "../../Redux/authSlice.js";
 import { toast } from "react-toastify";
+import { FiUser, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import logo from "../../assets/logo.png";
 
 export default function Login() {
@@ -12,12 +13,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   // Get auth state from Redux
-  const {
-    isLoading,
-    error: authError,
-    user,
-    isAuthenticated,
-  } = useSelector((state) => state.auth);
+  const { isLoading, error: authError, user, isAuthenticated } = useSelector((state) => state.auth);
 
   const successMsg = location.state?.success || null;
 
@@ -29,404 +25,234 @@ export default function Login() {
 
   const [error, setError] = useState(null);
   const loading = isLoading;
-
-  // Validation state
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const toastShownRef = useRef(false);
 
-  // Display success message (e.g., logout message) in toast
   useEffect(() => {
     if (successMsg && !toastShownRef.current) {
-      toast.success(successMsg, {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-
+      toast.success(successMsg, { position: "top-right", autoClose: 3000 });
       toastShownRef.current = true;
-
-      // clear state so it doesn't show again
       window.history.replaceState({}, document.title);
     }
   }, [successMsg]);
 
-  // Validation functions
+  // Validation
   const validateEmail = (email) => {
-    if (!email || email.trim() === "") {
-      return "Email is required";
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      return "Please enter a valid email address";
-    }
-    return "";
+    if (!email || email.trim() === "") return "Email is required";
+    return ""; // Simplified validation for flexibility
   };
 
   const validatePassword = (password) => {
-    if (!password || password.trim() === "") {
-      return "Password is required";
-    }
+    if (!password || password.trim() === "") return "Password is required";
     return "";
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-
-    // Validate on change if field has been touched
     if (touched[name]) {
-      let error = "";
-      if (name === "username") {
-        error = validateEmail(value);
-      } else if (name === "password") {
-        error = validatePassword(value);
-      }
-      setErrors((prev) => ({ ...prev, [name]: error }));
+      let err = name === "username" ? validateEmail(value) : validatePassword(value);
+      setErrors((prev) => ({ ...prev, [name]: err }));
     }
   };
 
   const handleBlur = (field) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
-    const value = form[field] || "";
-    let error = "";
-    if (field === "username") {
-      error = validateEmail(value);
-    } else if (field === "password") {
-      error = validatePassword(value);
-    }
-    setErrors((prev) => ({ ...prev, [field]: error }));
+    let err = field === "username" ? validateEmail(form.username) : validatePassword(form.password);
+    setErrors((prev) => ({ ...prev, [field]: err }));
   };
 
-  // Handle successful login - navigate based on role
   useEffect(() => {
     if (isAuthenticated && user.role) {
       toast.success("Login successful!");
-
       setTimeout(() => {
         const userRole = user.role;
-        if (userRole === "CITIZEN") {
-          navigate("/citizen/dashboard", {
-            state: { success: "Login successful! Welcome Citizen." },
-          });
-        } else if (userRole === "LAWYER") {
-          navigate("/lawyer/dashboard", {
-            state: { success: "Login successful! Welcome Lawyer." },
-          });
-        } else if (userRole === "NGO") {
-          navigate("/ngo/dashboard", {
-            state: { success: "Login successful! Welcome NGO Member." },
-          });
-        } else if (userRole === "ADMIN") {
-          navigate("/dashboard/admin", {
-            state: { success: "Login successful! Welcome Admin." },
-          });
-        } else {
-          navigate("/");
-        }
+        const path = userRole === "CITIZEN" ? "/citizen/dashboard" :
+          userRole === "LAWYER" ? "/lawyer/dashboard" :
+            userRole === "NGO" ? "/ngo/dashboard" : "/dashboard/admin";
+        navigate(path, { state: { success: `Welcome ${userRole}` } });
       }, 500);
     }
   }, [isAuthenticated, user.role, navigate]);
 
-  // Handle auth errors from Redux
   useEffect(() => {
     if (authError) {
-      toast.error(authError, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      toast.error(authError);
       setError(authError);
-      // Clear error after displaying
       dispatch(clearError());
     }
   }, [authError, dispatch]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    e.stopPropagation(); // Prevent event bubbling
-
-    // Clear previous errors
+    e.stopPropagation();
     setError(null);
     setErrors({});
     dispatch(clearError());
 
-    // Validate all fields
     const emailError = validateEmail(form.username);
     const passwordError = validatePassword(form.password);
-
     const newErrors = {};
-    if (emailError) {
-      newErrors.username = emailError;
-    }
-    if (passwordError) {
-      newErrors.password = passwordError;
-    }
+    if (emailError) newErrors.username = emailError;
+    if (passwordError) newErrors.password = passwordError;
 
     setErrors(newErrors);
     setTouched({ username: true, password: true });
 
-    // If there are validation errors, don't submit
     if (Object.keys(newErrors).length > 0) {
-      toast.error("Please fix all validation errors before submitting");
-      return false; // Explicitly return false to prevent any default behavior
+      toast.error("Please fix validation errors");
+      return;
     }
 
-    // Dispatch login action using Redux
-    const result = await dispatch(
-      loginUser({
-        username: form.username,
-        password: form.password,
-        role: form.role,
-      })
-    );
-
-    // Check if login was successful
-    if (loginUser.fulfilled.match(result)) {
-      // Navigation will be handled by useEffect when isAuthenticated becomes true
-      return false;
-    } else {
-      // Error is already handled by useEffect watching authError
-      return false;
-    }
+    await dispatch(loginUser({ username: form.username, password: form.password, role: form.role }));
   };
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-blue-50 px-4">
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8 min-h-[520px]">
-        {/* IMAGE LEFT */}
-        <div className="relative rounded-2xl overflow-hidden shadow-2xl h-full">
+    <section className="min-h-screen flex items-center justify-center bg-white dark:bg-[#111111] px-4 py-12 relative overflow-hidden font-serif transition-colors duration-300">
+      {/* Background Texture/Gradient */}
+      <div className="absolute inset-0 z-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37] rounded-full filter blur-[150px] opacity-10 animate-pulse"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#8B4513] rounded-full filter blur-[150px] opacity-10"></div>
+
+      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-0 min-h-[650px] shadow-2xl overflow-hidden z-10 relative border border-gray-100 dark:border-transparent transition-colors">
+        {/* LEFT PANEL - IMAGE */}
+        <div className="relative hidden md:block group overflow-hidden bg-black">
           <img
-            src="https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1400&q=60"
-            alt="justice"
-            className="absolute inset-0 w-full h-full object-cover transform transition-transform duration-700 hover:scale-105"
+            src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?q=80&w=2070&auto=format&fit=crop"
+            alt="Lady Justice"
+            className="absolute inset-0 w-full h-full object-cover opacity-60 transition-transform duration-1000 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/25 to-transparent" />
-          <div className="relative z-10 p-8 h-full flex flex-col justify-end text-white">
-            <h3 className="text-3xl font-bold">Justice for Everyone</h3>
-            <p className="mt-3 text-white/90">
-              Connect with lawyers, NGOs, and access free legal help.
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+
+          <div className="absolute bottom-0 left-0 p-12 text-[#E5E5E5] z-10">
+            <div className="w-20 h-20 mb-6 flex items-center justify-center border-2 border-[#D4AF37]/30 rounded-full bg-black/50 backdrop-blur-md">
+              <img src={logo} alt="Logo" className="w-12 h-12 object-contain brightness-0 invert" />
+            </div>
+            <h2 className="text-5xl font-bold mb-4 tracking-tight font-serif text-[#D4AF37]">AdvoCare</h2>
+            <p className="text-gray-300 text-lg font-light leading-relaxed max-w-md border-l-4 border-[#D4AF37] pl-4">
+              "Justice delayed is justice denied." <br /> Connect with top verified legal experts instantly.
             </p>
           </div>
         </div>
 
-        {/* LOGIN FORM */}
-        <div className="w-full h-full flex flex-col">
-          <div className="bg-white/95 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-xl p-8  w-full h-full flex flex-col justify-center">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-extrabold font-serif text-gray-900">
-                Welcome Back
-              </h2>
-
-              <img
-                src={logo} // or correct path to your logo
-                alt="App Logo"
-                className="h-15 w-auto"
-              />
+        {/* RIGHT PANEL - LOGIN FORM */}
+        <div className="w-full h-full flex flex-col justify-center p-10 md:p-16 bg-white dark:bg-[#1a1a1a] relative border-l border-gray-100 dark:border-[#333] transition-colors">
+          <div className="max-w-md mx-auto w-full">
+            <div className="mb-10 text-center md:text-left">
+              <h2 className="text-4xl font-bold text-[#D4AF37] mb-2 font-serif">Member Login</h2>
+              <p className="text-gray-500 dark:text-gray-400 font-sans transition-colors">Access your legal dashboard securely.</p>
             </div>
 
-            {error && (
-              <div className="mb-4 text-sm text-red-600 rounded px-3 py-2 bg-red-50 border border-red-100">
-                {error}
-              </div>
-            )}
+            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
 
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-4"
-              noValidate
-              onKeyDown={(e) => {
-                // Prevent form submission on Enter key if there are errors
-                if (
-                  e.key === "Enter" &&
-                  (loading || Object.keys(errors).length > 0)
-                ) {
-                  e.preventDefault();
-                }
-              }}
-            >
+              {/* ROLE SELECTOR */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Registered Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  name="username"
-                  value={form.username}
-                  type="email"
-                  onChange={handleChange}
-                  onBlur={() => handleBlur("username")}
-                  disabled={loading}
-                  className={`w-full border rounded-lg p-3 focus:outline-none focus:ring-1 ${
-                    loading
-                      ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-200"
-                      : touched.username && errors.username
-                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                      : "border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                  }`}
-                />
+                <label className="block text-xs uppercase tracking-wider text-[#D4AF37] mb-3 font-semibold">I am a</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {['CITIZEN', 'LAWYER', 'NGO', 'ADMIN'].map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => handleChange({ target: { name: 'role', value: r } })}
+                      className={`py-2.5 px-4 text-xs font-bold uppercase tracking-widest transition-all border ${form.role === r
+                        ? 'bg-[#D4AF37] text-black border-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+                        : 'bg-gray-50 dark:bg-[#252525] text-gray-400 dark:text-gray-500 border-gray-200 dark:border-[#333] hover:border-[#D4AF37] hover:text-[#D4AF37]'}`}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* EMAIL */}
+              <div className="group">
+                <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 mb-2 uppercase tracking-wide group-focus-within:text-[#D4AF37] transition-colors">Email Address</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <FiUser className="h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-[#D4AF37] transition-colors" />
+                  </div>
+                  <input
+                    type="email"
+                    name="username"
+                    value={form.username}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur("username")}
+                    className={`block w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-[#252525] border ${touched.username && errors.username ? 'border-red-500 bg-red-50 dark:border-red-900 dark:bg-red-900/10' : 'border-gray-200 dark:border-[#333]'} text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:border-[#D4AF37] dark:focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all font-sans text-sm`}
+                    placeholder="Enter your registered email"
+                  />
+                </div>
                 {touched.username && errors.username && (
-                  <span className="text-red-500 text-sm mt-1 block">
-                    {errors.username}
-                  </span>
+                  <p className="text-red-500 text-xs mt-1 font-sans">{errors.username}</p>
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password <span className="text-red-500">*</span>
-                </label>
+              {/* PASSWORD */}
+              <div className="group">
+                <label className="block text-xs font-bold text-gray-400 dark:text-gray-500 mb-2 uppercase tracking-wide group-focus-within:text-[#D4AF37] transition-colors">Password</label>
                 <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <FiLock className="h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-[#D4AF37] transition-colors" />
+                  </div>
                   <input
-                    name="password"
                     type={showPassword ? "text" : "password"}
+                    name="password"
                     value={form.password}
                     onChange={handleChange}
                     onBlur={() => handleBlur("password")}
-                    disabled={loading}
-                    className={`w-full border rounded-lg p-3 pr-10 focus:outline-none focus:ring-1 ${
-                      loading
-                        ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-200"
-                        : touched.password && errors.password
-                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                        : "border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                    }`}
+                    className={`block w-full pl-12 pr-12 py-4 bg-gray-50 dark:bg-[#252525] border ${touched.password && errors.password ? 'border-red-500 bg-red-50 dark:border-red-900 dark:bg-red-900/10' : 'border-gray-200 dark:border-[#333]'} text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:border-[#D4AF37] dark:focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all font-sans text-sm`}
+                    placeholder="••••••••"
                   />
-
                   <button
                     type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                    tabIndex={-1}
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-[#D4AF37] focus:outline-none cursor-pointer"
                   >
-                    {showPassword ? (
-                      // eye-off
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10a9.99 9.99 0 012.93-7.07M3 3l18 18"
-                        />
-                      </svg>
-                    ) : (
-                      // eye
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                    )}
+                    {showPassword ? <FiEyeOff className="h-5 w-5" /> : <FiEye className="h-5 w-5" />}
                   </button>
                 </div>
-
                 {touched.password && errors.password && (
-                  <span className="text-red-500 text-sm mt-1 block">
-                    {errors.password}
-                  </span>
+                  <p className="text-red-500 text-xs mt-1 font-sans">{errors.password}</p>
                 )}
+                <div className="flex justify-end mt-2">
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs font-medium text-gray-400 dark:text-gray-500 hover:text-[#D4AF37] transition-colors font-sans"
+                  >
+                    Forgot Password?
+                  </Link>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Login as
-                </label>
-                <select
-                  name="role"
-                  value={form.role}
-                  onChange={handleChange}
-                  className="w-full border border-gray-200 rounded-lg p-3"
-                >
-                  <option value="CITIZEN">Citizen</option>
-                  <option value="LAWYER">Lawyer</option>
-                  <option value="NGO">NGO</option>
-                  <option value="ADMIN">Admin</option>
-                </select>
-              </div>
-              <div className="text-right">
-                <Link
-                  to="/forgot-password"
-                  className="text-blue-600 text-sm hover:underline font-medium"
-                >
-                  Forgot Password?
-                </Link>
-              </div>
+              {error && (
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 flex items-start gap-3 transition-colors">
+                  <span className="text-red-500 mt-0.5"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
+                  <div className="text-sm text-red-600 dark:text-red-400 font-sans transition-colors">{error}</div>
+                </div>
+              )}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className={`w-full flex justify-center py-4 px-4 border border-transparent shadow-lg text-sm font-bold uppercase tracking-widest text-[#1a1a1a] bg-[#D4AF37] hover:bg-[#c5a059] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#D4AF37] transition-all transform hover:-translate-y-0.5 active:scale-[0.98] font-sans ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
               >
-                {loading ? (
-                  <>
-                    <svg
-                      className="animate-spin h-5 w-5"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    <span>Logging in...</span>
-                  </>
-                ) : (
-                  "Log In"
-                )}
+                {loading ? "AUTHENTICATING..." : "LOGIN"}
               </button>
             </form>
 
-            <div className="mt-6 text-center text-sm text-gray-600">
-              <span>Don’t have an account?</span>
-              <Link
-                to="/register"
-                className="text-blue-600 font-semibold ml-2 hover:underline"
-              >
-                Register
-              </Link>
+            <div className="mt-8 pt-8 border-t border-gray-100 dark:border-[#333] text-center font-sans transition-colors">
+              <p className="text-gray-400 dark:text-gray-500 text-sm">
+                New to AdvoCare?{" "}
+                <Link
+                  to="/register"
+                  className="font-bold text-[#D4AF37] hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  Register Now
+                </Link>
+              </p>
             </div>
           </div>
         </div>
-        {/* <p className="mt-6 text-center  width-100 text-xs text-gray-500">
-          Need urgent help? Call our helpline:{" "}
-          <span className="font-medium">1800-000-000</span>
-        </p> */}
       </div>
     </section>
   );

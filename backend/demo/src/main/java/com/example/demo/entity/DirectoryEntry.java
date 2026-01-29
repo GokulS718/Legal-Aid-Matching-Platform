@@ -48,6 +48,8 @@ public class DirectoryEntry {
     private Double latitude;
     private Double longitude;
 
+    private Integer originalId;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -214,5 +216,13 @@ public class DirectoryEntry {
 
     public void setApproved(boolean approved) {
         this.approved = approved;
+    }
+
+    public Integer getOriginalId() {
+        return originalId;
+    }
+
+    public void setOriginalId(Integer originalId) {
+        this.originalId = originalId;
     }
 }

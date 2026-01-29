@@ -8,6 +8,7 @@ import com.example.demo.repository.CitizenRepository;
 import com.example.demo.repository.LawyerRepository;
 import com.example.demo.repository.NGORepository;
 import com.example.demo.repository.AdminRepository;
+import com.example.demo.service.OtpService;
 import com.example.demo.util.JwtUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
 
     private final CitizenRepository citizenRepo;
@@ -26,18 +26,21 @@ public class AuthController {
     private final NGORepository ngoRepo;
     private final AdminRepository adminRepo;
     private final JwtUtil jwtUtil;
+    private final OtpService otpService;
 
     public AuthController(
             CitizenRepository citizenRepo,
             LawyerRepository lawyerRepo,
             NGORepository ngoRepo,
             AdminRepository adminRepo,
-            JwtUtil jwtUtil) {
+            JwtUtil jwtUtil,
+            OtpService otpService) {
         this.citizenRepo = citizenRepo;
         this.lawyerRepo = lawyerRepo;
         this.ngoRepo = ngoRepo;
         this.adminRepo = adminRepo;
         this.jwtUtil = jwtUtil;
+        this.otpService = otpService;
     }
 
     @PostMapping("/login")
@@ -275,5 +278,86 @@ public class AuthController {
         data.put("createdAt", admin.getCreatedAt() != null ? admin.getCreatedAt().toString() : null);
         data.put("updatedAt", admin.getUpdatedAt() != null ? admin.getUpdatedAt().toString() : null);
         return data;
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String role = request.get("role");
+
+        boolean exists = false;
+        switch (role.toUpperCase()) {
+            case "CITIZEN":
+                exists = citizenRepo.existsByEmail(email);
+                break;
+            case "LAWYER":
+                exists = lawyerRepo.existsByEmail(email);
+                break;
+            case "NGO":
+                exists = ngoRepo.existsByEmail(email);
+                break;
+            case "ADMIN":
+                exists = adminRepo.existsByEmail(email);
+                break;
+        }
+
+        if (!exists) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with this email and role");
+        }
+
+        otpService.generateAndSendOtp(email);
+        return ResponseEntity.ok(Map.of("message", "OTP sent successfully to " + email));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String otp = request.get("otp");
+
+        if (otpService.verifyOtp(email, otp)) {
+            return ResponseEntity.ok(Map.of("message", "OTP verified successfully"));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired OTP");
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String role = request.get("role");
+        String newPassword = request.get("newPassword");
+
+        switch (role.toUpperCase()) {
+            case "CITIZEN":
+                Citizen citizen = citizenRepo.findByEmail(email);
+                if (citizen != null) {
+                    citizen.setPassword(newPassword);
+                    citizenRepo.save(citizen);
+                }
+                break;
+            case "LAWYER":
+                Lawyer lawyer = lawyerRepo.findByEmail(email);
+                if (lawyer != null) {
+                    lawyer.setPassword(newPassword);
+                    lawyerRepo.save(lawyer);
+                }
+                break;
+            case "NGO":
+                NGO ngo = ngoRepo.findByEmail(email);
+                if (ngo != null) {
+                    ngo.setPassword(newPassword);
+                    ngoRepo.save(ngo);
+                }
+                break;
+            case "ADMIN":
+                Admin admin = adminRepo.findByEmail(email);
+                if (admin != null) {
+                    admin.setPassword(newPassword);
+                    adminRepo.save(admin);
+                }
+                break;
+        }
+
+        return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
     }
 }

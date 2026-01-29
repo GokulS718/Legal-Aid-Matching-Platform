@@ -19,12 +19,17 @@ public class MatchingService {
     private final CaseRepository caseRepository;
     private final LawyerRepository lawyerRepository;
     private final NGORepository ngoRepository;
+    private final NotificationService notificationService;
+    private final com.example.demo.repository.CaseMatchRepository caseMatchRepository;
 
     public MatchingService(CaseRepository caseRepository, LawyerRepository lawyerRepository,
-            NGORepository ngoRepository) {
+            NGORepository ngoRepository, NotificationService notificationService,
+            com.example.demo.repository.CaseMatchRepository caseMatchRepository) {
         this.caseRepository = caseRepository;
         this.lawyerRepository = lawyerRepository;
         this.ngoRepository = ngoRepository;
+        this.notificationService = notificationService;
+        this.caseMatchRepository = caseMatchRepository;
     }
 
     public Map<String, Object> findMatchesForCase(Long caseId) {
@@ -39,18 +44,48 @@ public class MatchingService {
         String location = caseEntity.getIncidentPlace();
 
         Map<String, Object> matches = new HashMap<>();
+        int matchCount = 0;
 
         if (specialization != null && !specialization.isEmpty()) {
-            List<Lawyer> matchedLawyers = lawyerRepository.findMatches(specialization,
-                    location != null ? location : "");
+            List<Lawyer> matchedLawyers = lawyerRepository.findMatches(specialization);
             matches.put("lawyers", matchedLawyers);
+
+            for (Lawyer lawyer : matchedLawyers) {
+                saveMatchIfNotExists(caseId, lawyer.getId(), "LAWYER", 1.0); // Simple scoring
+            }
+            matchCount += matchedLawyers.size();
         }
 
         if (ngoType != null && !ngoType.isEmpty()) {
-            List<NGO> matchedNgos = ngoRepository.findMatches(ngoType, location != null ? location : "");
+            List<NGO> matchedNgos = ngoRepository.findMatches(ngoType);
             matches.put("ngos", matchedNgos);
+
+            for (NGO ngo : matchedNgos) {
+                saveMatchIfNotExists(caseId, ngo.getId(), "NGO", 1.0);
+            }
+            matchCount += matchedNgos.size();
+        }
+
+        // Notify Citizen if matches found
+        if (matchCount > 0) {
+            notificationService.createNotification(
+                    caseEntity.getCitizenId(),
+                    "CITIZEN",
+                    "Found " + matchCount + " matches for your case: "
+                            + (caseEntity.getCaseTitle() != null ? caseEntity.getCaseTitle()
+                                    : caseEntity.getCaseNumber()),
+                    "MATCH",
+                    caseEntity.getId());
         }
 
         return matches;
+    }
+
+    private void saveMatchIfNotExists(Long caseId, Integer providerId, String role, Double score) {
+        if (caseMatchRepository.findByCaseIdAndProviderIdAndProviderRole(caseId, providerId, role).isEmpty()) {
+            com.example.demo.entity.CaseMatch match = new com.example.demo.entity.CaseMatch(caseId, providerId, role,
+                    score);
+            caseMatchRepository.save(match);
+        }
     }
 }

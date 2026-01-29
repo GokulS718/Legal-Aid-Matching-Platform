@@ -16,12 +16,21 @@ public class ApproveImportedEntries {
             try {
                 System.out.println("Approving existing imported directory entries...");
 
-                // Update all imported entries from BAR_COUNCIL and NGO_DARPAN to be approved
-                int updated = jdbcTemplate.update(
-                        "UPDATE directory_entries SET approved = false " +
-                                "WHERE source IN ('BAR_COUNCIL', 'NGO_DARPAN')");
+                // Check total count
+                Integer total = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM directory_entries", Integer.class);
+                System.out.println("DEBUG: Total directory entries found: " + total);
 
-                System.out.println("✓ Approved " + updated + " imported directory entries!");
+                Integer unapproved = jdbcTemplate
+                        .queryForObject("SELECT COUNT(*) FROM directory_entries WHERE approved = false", Integer.class);
+                System.out.println("DEBUG: Unapproved entries: " + unapproved);
+
+                // Update all imported entries from BAR_COUNCIL, NGO_DARPAN, and
+                // USER_REGISTRATION to be approved
+                int updated = jdbcTemplate.update(
+                        "UPDATE directory_entries SET approved = true " +
+                                "WHERE source IN ('BAR_COUNCIL', 'NGO_DARPAN', 'USER_REGISTRATION')");
+
+                System.out.println("✓ Approved " + updated + " directory entries (including USER_REGISTRATION)!");
 
             } catch (Exception e) {
                 System.err.println("Failed to approve imported entries: " + e.getMessage());

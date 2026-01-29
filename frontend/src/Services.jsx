@@ -1,84 +1,214 @@
 import React from "react";
 import Navbar from "./pages/NavBar";
 import { Link } from "react-router-dom";
+import { FiArrowRight } from "react-icons/fi";
 
 export default function Services() {
   return (
-    <section className="min-h-screen bg-gradient-to-b from-white to-blue-50 pt-28 px-6">
-      <div className="max-w-6xl mx-auto">
-        {/* HEADER */}
-        <Navbar />
-        <h1 className="text-4xl font-extrabold text-center text-gray-900">
-          Our Services
-        </h1>
-        <p className="text-center text-gray-600 mt-3 max-w-2xl mx-auto">
-          We provide a wide range of legal and social justice services designed
-          to support citizens, lawyers, and NGOs.
-        </p>
+    <div className="w-full bg-white dark:bg-[#111111] text-gray-900 dark:text-gray-200 font-sans selection:bg-[#D4AF37] selection:text-black transition-colors duration-300">
+      <Navbar />
 
-        {/* SERVICE CARDS */}
-        <div className="grid md:grid-cols-3 gap-10 mt-12">
-          {/* CITIZEN SERVICE */}
-          <div className="bg-white shadow-xl rounded-xl p-8 hover:shadow-2xl transition">
-            <img
-              className="w-full h-48 object-cover rounded-lg"
-              src="data:image/jpeg;base64,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"
-              alt="citizens"
-            />
-            <h3 className="text-2xl font-semibold mt-5">Citizen Support</h3>
-            <p className="text-gray-600 mt-3">
-              File your case, describe your issue, and get connected with
-              trusted lawyers & NGOs.
+      {/* HERO SECTION */}
+      <section className="relative py-24 bg-white dark:bg-[#111111] transition-colors">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-[0.3em] mb-2 block">Our Services</span>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-[#f0f0f0] mb-4 font-serif transition-colors">
+              Our Services
+            </h1>
+            <div className="w-24 h-1 bg-[#D4AF37] mx-auto mb-6"></div>
+            <p className="text-xl text-gray-600 dark:text-gray-400 text-center max-w-4xl mx-auto leading-relaxed font-light transition-colors">
+              We provide a wide range of legal and social justice services designed
+              to support citizens, lawyers, and NGOs.
             </p>
-            <Link
-              className="text-blue-600 font-medium mt-4 block"
-              to="/register"
-            >
-              Get Support →
-            </Link>
-          </div>
-
-          {/* LAWYER SERVICE */}
-          <div className="bg-white shadow-xl rounded-xl p-8 hover:shadow-2xl transition">
-            <img
-              className="w-full h-48 object-cover rounded-lg"
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFtDI8QDkqzTnuVUj7V-0h-LdjUlYTfTA97w&s"
-              alt="lawyers"
-            />
-            <h3 className="text-2xl font-semibold mt-5">Pro Bono Work</h3>
-            <p className="text-gray-600 mt-3">
-              Lawyers can volunteer expertise and support those without access
-              to legal aid.
-            </p>
-            <Link
-              className="text-green-600 font-medium mt-4 block"
-              to="/register"
-            >
-              Join as Lawyer →
-            </Link>
-          </div>
-
-          {/* NGO SERVICE */}
-          <div className="bg-white shadow-xl rounded-xl p-8 hover:shadow-2xl transition">
-            <img
-              className="w-full h-48 object-cover rounded-lg"
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHwqtBTAV6ObRkspW7EFTjM0T7-DWWoGg7_Q&s"
-              alt="ngo"
-            />
-            <h3 className="text-2xl font-semibold mt-5">NGO Collaboration</h3>
-            <p className="text-gray-600 mt-3">
-              NGOs can collaborate on social justice issues and help communities
-              in need.
-            </p>
-            <Link
-              className="text-indigo-600 font-medium mt-4 block"
-              to="/register"
-            >
-              Register NGO →
-            </Link>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* SERVICE CARDS SECTION */}
+      <section className="relative py-24 bg-gray-50 dark:bg-[#0a0a0a] transition-colors">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* CITIZEN SERVICE */}
+            <div className="relative group overflow-hidden shadow-2xl">
+              <div className="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition-all z-10"></div>
+              <img 
+                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop" 
+                className="w-full h-[500px] object-cover grayscale group-hover:grayscale-0 transition-all duration-700" 
+                alt="Citizen Support" 
+              />
+              <div className="absolute bottom-0 left-0 p-8 z-20 w-full bg-gradient-to-t from-black to-transparent">
+                <h3 className="text-3xl font-bold text-[#D4AF37] mb-2 font-serif">Citizen Support</h3>
+                <p className="text-gray-300 mb-4 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                  File your case, describe your issue, and get connected with trusted lawyers & NGOs.
+                </p>
+                <Link to="/register" className="inline-flex items-center text-[#D4AF37] font-bold uppercase tracking-widest text-sm hover:text-white transition-colors">
+                  Get Support <FiArrowRight className="ml-2" />
+                </Link>
+              </div>
+            </div>
+
+            {/* LAWYER SERVICE */}
+            <div className="relative group overflow-hidden shadow-2xl">
+              <div className="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition-all z-10"></div>
+              <img 
+                src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=2664&auto=format&fit=crop" 
+                className="w-full h-[500px] object-cover grayscale group-hover:grayscale-0 transition-all duration-700" 
+                alt="Pro Bono Work" 
+              />
+              <div className="absolute bottom-0 left-0 p-8 z-20 w-full bg-gradient-to-t from-black to-transparent">
+                <h3 className="text-3xl font-bold text-[#D4AF37] mb-2 font-serif">Pro Bono Work</h3>
+                <p className="text-gray-300 mb-4 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                  Lawyers can volunteer expertise and support those without access to legal aid.
+                </p>
+                <Link to="/register" className="inline-flex items-center text-[#D4AF37] font-bold uppercase tracking-widest text-sm hover:text-white transition-colors">
+                  Join as Lawyer <FiArrowRight className="ml-2" />
+                </Link>
+              </div>
+            </div>
+
+            {/* NGO SERVICE */}
+            <div className="relative group overflow-hidden shadow-2xl">
+              <div className="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition-all z-10"></div>
+              <img 
+                src="https://images.unsplash.com/photo-1593113598332-cd288d649433?q=80&w=2070&auto=format&fit=crop" 
+                className="w-full h-[500px] object-cover grayscale group-hover:grayscale-0 transition-all duration-700" 
+                alt="NGO Collaboration" 
+              />
+              <div className="absolute bottom-0 left-0 p-8 z-20 w-full bg-gradient-to-t from-black to-transparent">
+                <h3 className="text-3xl font-bold text-[#D4AF37] mb-2 font-serif">NGO Collaboration</h3>
+                <p className="text-gray-300 mb-4 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                  NGOs can collaborate on social justice issues and help communities in need.
+                </p>
+                <Link to="/register" className="inline-flex items-center text-[#D4AF37] font-bold uppercase tracking-widest text-sm hover:text-white transition-colors">
+                  Register NGO <FiArrowRight className="ml-2" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* DETAILED SERVICES SECTION */}
+      <section className="relative py-24 bg-white dark:bg-[#111111] transition-colors">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-[#f0f0f0] mb-4 font-serif transition-colors">
+              How We Help <span className="text-[#D4AF37]">.</span>
+            </h2>
+            <div className="w-24 h-1 bg-[#D4AF37] mx-auto mb-6"></div>
+            <p className="text-xl text-gray-600 dark:text-gray-400 text-center max-w-4xl mx-auto leading-relaxed font-light transition-colors">
+              Our comprehensive platform connects those in need with verified legal professionals and support organizations.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            {/* CITIZEN SUPPORT DETAILS */}
+            <div className="group p-8 rounded-2xl border border-gray-100 dark:border-[#333] bg-gray-50 dark:bg-[#1a1a1a] hover:border-[#D4AF37] transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-[#D4AF37] opacity-5 rounded-bl-full transition-all group-hover:scale-150"></div>
+              <div className="text-4xl mb-6">⚖️</div>
+              <h3 className="text-2xl font-bold text-[#D4AF37] mb-4 font-serif">Citizen Support</h3>
+              <p className="text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-gray-300 transition-colors leading-relaxed mb-4">
+                File your case, describe your issue, and get connected with trusted lawyers & NGOs.
+              </p>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#D4AF37] mt-1">•</span>
+                  <span>Case filing and documentation assistance</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#D4AF37] mt-1">•</span>
+                  <span>Verified lawyer matching based on specialization</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#D4AF37] mt-1">•</span>
+                  <span>NGO support for social justice cases</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#D4AF37] mt-1">•</span>
+                  <span>Secure messaging and consultation booking</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* PRO BONO WORK DETAILS */}
+            <div className="group p-8 rounded-2xl border border-gray-100 dark:border-[#333] bg-gray-50 dark:bg-[#1a1a1a] hover:border-[#D4AF37] transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-[#D4AF37] opacity-5 rounded-bl-full transition-all group-hover:scale-150"></div>
+              <div className="text-4xl mb-6">👨‍⚖️</div>
+              <h3 className="text-2xl font-bold text-[#D4AF37] mb-4 font-serif">Pro Bono Work</h3>
+              <p className="text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-gray-300 transition-colors leading-relaxed mb-4">
+                Lawyers can volunteer expertise and support those without access to legal aid.
+              </p>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#D4AF37] mt-1">•</span>
+                  <span>Take on pro-bono cases from verified citizens</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#D4AF37] mt-1">•</span>
+                  <span>Manage your availability and appointments</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#D4AF37] mt-1">•</span>
+                  <span>Build your professional profile and reputation</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#D4AF37] mt-1">•</span>
+                  <span>Connect with NGOs for collaborative cases</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* NGO COLLABORATION DETAILS */}
+            <div className="group p-8 rounded-2xl border border-gray-100 dark:border-[#333] bg-gray-50 dark:bg-[#1a1a1a] hover:border-[#D4AF37] transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-[#D4AF37] opacity-5 rounded-bl-full transition-all group-hover:scale-150"></div>
+              <div className="text-4xl mb-6">🤝</div>
+              <h3 className="text-2xl font-bold text-[#D4AF37] mb-4 font-serif">NGO Collaboration</h3>
+              <p className="text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-gray-300 transition-colors leading-relaxed mb-4">
+                NGOs can collaborate on social justice issues and help communities in need.
+              </p>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#D4AF37] mt-1">•</span>
+                  <span>Verify and support citizen cases</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#D4AF37] mt-1">•</span>
+                  <span>Partner with lawyers for legal support</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#D4AF37] mt-1">•</span>
+                  <span>Provide on-ground social assistance</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#D4AF37] mt-1">•</span>
+                  <span>Track and manage community impact</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* ADDITIONAL FEATURES */}
+          <div className="mt-16 grid md:grid-cols-2 gap-8">
+            <div className="p-8 bg-gray-50 dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#333] transition-colors">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 font-serif">Verified Network</h3>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed transition-colors">
+                All lawyers and NGOs on our platform are verified and approved by our admin team. 
+                We ensure that every professional meets our quality standards and is committed 
+                to providing genuine legal support.
+              </p>
+            </div>
+            <div className="p-8 bg-gray-50 dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#333] transition-colors">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 font-serif">Secure Communication</h3>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed transition-colors">
+                Our platform provides end-to-end encrypted messaging, secure document sharing, 
+                and appointment scheduling. Your privacy and data security are our top priorities.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

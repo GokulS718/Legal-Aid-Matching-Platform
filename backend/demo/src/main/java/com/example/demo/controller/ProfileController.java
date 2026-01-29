@@ -20,7 +20,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/profile")
-@CrossOrigin(origins = "http://localhost:5173")
+
 public class ProfileController {
 
     @Autowired
@@ -34,6 +34,9 @@ public class ProfileController {
 
     @Autowired
     private CloudinaryService cloudinaryService;
+
+    @Autowired
+    private com.example.demo.service.AuditLogService auditLogService;
 
     @GetMapping("/me")
     public ResponseEntity<?> getProfile(HttpServletRequest request) {
@@ -94,7 +97,8 @@ public class ProfileController {
                 profileData.put("role", "CITIZEN");
                 profileData.put("photoUrl", citizen.getProfilePhotoUrl());
             } else if ("ADMIN".equals(role)) {
-                Admin admin = adminRepository.findByEmail(email);
+                // Use case-insensitive email lookup for admin
+                Admin admin = adminRepository.findByEmailIgnoreCase(email);
                 if (admin == null) {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND)
                             .body("Admin profile not found");
@@ -257,7 +261,8 @@ public class ProfileController {
                 profileData.put("role", "CITIZEN");
                 profileData.put("photoUrl", updatedCitizen.getProfilePhotoUrl());
             } else if ("ADMIN".equals(role)) {
-                Admin admin = adminRepository.findByEmail(email);
+                // Use case-insensitive email lookup for admin
+                Admin admin = adminRepository.findByEmailIgnoreCase(email);
                 if (admin == null) {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND)
                             .body("Admin profile not found");
@@ -347,6 +352,22 @@ public class ProfileController {
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Profile updated successfully");
             response.put("data", profileData);
+
+
+
+            // Log Audit
+            String ip = request.getRemoteAddr();
+            String userEmail = email; // captured from token
+            String userRole = role; // captured from token
+            
+            auditLogService.logAction(
+                userEmail, 
+                userRole,
+                "Updated Profile",
+                "User Profile",
+                "Updated profile details for role: " + userRole,
+                ip
+            );
 
             return ResponseEntity.ok(response);
 

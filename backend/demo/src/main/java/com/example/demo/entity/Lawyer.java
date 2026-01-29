@@ -97,7 +97,19 @@ public class Lawyer {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @JsonProperty("adminStatus")
+    @Column(name = "admin_status", nullable = false, columnDefinition = "varchar(255) default 'PENDING'")
+    private String adminStatus = "PENDING"; // PENDING, APPROVED, REJECTED
+
     // GETTERS & SETTERS
+
+    public String getAdminStatus() {
+        return adminStatus;
+    }
+
+    public void setAdminStatus(String adminStatus) {
+        this.adminStatus = adminStatus;
+    }
 
     public Integer getId() {
         return id;

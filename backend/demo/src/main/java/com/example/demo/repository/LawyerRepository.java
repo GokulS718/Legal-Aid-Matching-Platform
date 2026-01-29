@@ -2,6 +2,7 @@ package com.example.demo.repository;
 
 import com.example.demo.entity.Lawyer;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -18,6 +19,9 @@ public interface LawyerRepository extends JpaRepository<Lawyer, Integer> {
 
     // for verification-based filtering
     List<Lawyer> findByVerificationStatusTrue();
+    
+    // Count methods for admin stats
+    long countByVerificationStatusTrue();
 
     // ✅ existing for directory search
     List<Lawyer> findByCity(String city);
@@ -26,6 +30,6 @@ public interface LawyerRepository extends JpaRepository<Lawyer, Integer> {
 
     List<Lawyer> findByCityAndSpecialization(String city, String specialization);
 
-    @org.springframework.data.jpa.repository.Query("SELECT l FROM Lawyer l WHERE l.isApproved = true AND l.specialization = :specialization AND (LOWER(l.district) LIKE LOWER(CONCAT('%', :location, '%')) OR LOWER(l.state) LIKE LOWER(CONCAT('%', :location, '%')) OR LOWER(l.city) LIKE LOWER(CONCAT('%', :location, '%')))")
-    List<Lawyer> findMatches(String specialization, String location);
+    @org.springframework.data.jpa.repository.Query("SELECT l FROM Lawyer l WHERE l.isApproved = true AND LOWER(l.specialization) LIKE LOWER(CONCAT('%', :specialization, '%'))")
+    List<Lawyer> findMatches(@Param("specialization") String specialization);
 }

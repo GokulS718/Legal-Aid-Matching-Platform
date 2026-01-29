@@ -53,6 +53,7 @@ public class SyncExistingUsersToDirectory {
                         entry.setLongitude(lawyer.getLongitude());
                         entry.setVerified(lawyer.isVerificationStatus());
                         entry.setApproved(lawyer.isApproved());
+                        entry.setOriginalId(lawyer.getId()); // FIX: Set correct originalId
                         directoryEntryRepository.save(entry);
                         lawyersSynced++;
                     }
@@ -81,6 +82,7 @@ public class SyncExistingUsersToDirectory {
                         entry.setLongitude(ngo.getLongitude());
                         entry.setVerified(ngo.isVerificationStatus());
                         entry.setApproved(ngo.isApproved());
+                        entry.setOriginalId(ngo.getId()); // FIX: Set correct originalId
                         directoryEntryRepository.save(entry);
                         ngosSynced++;
                     }

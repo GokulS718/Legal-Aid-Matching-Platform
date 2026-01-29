@@ -55,40 +55,111 @@ public class Citizen {
     @Column(name = "profile_photo_url", length = 500)
     private String profilePhotoUrl;
 
+    @Column(name = "enabled", nullable = false)
+    private Boolean enabled = true;
+
     // GETTERS & SETTERS
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
+    public Integer getId() {
+        return id;
+    }
 
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
-    public String getAadharNum() { return aadharNum; }
-    public void setAadharNum(String aadharNum) { this.aadharNum = aadharNum; }
+    public String getFullName() {
+        return fullName;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
 
-    public String getMobileNum() { return mobileNum; }
-    public void setMobileNum(String mobileNum) { this.mobileNum = mobileNum; }
+    public String getAadharNum() {
+        return aadharNum;
+    }
 
-    public LocalDate getDateOfBirth() { return dateOfBirth; }
-    public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+    public void setAadharNum(String aadharNum) {
+        this.aadharNum = aadharNum;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public String getEmail() {
+        return email;
+    }
 
-    public String getState() { return state; }
-    public void setState(String state) { this.state = state; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-    public String getDistrict() { return district; }
-    public void setDistrict(String district) { this.district = district; }
+    public String getMobileNum() {
+        return mobileNum;
+    }
 
-    public String getCity() { return city; }
-    public void setCity(String city) { this.city = city; }
+    public void setMobileNum(String mobileNum) {
+        this.mobileNum = mobileNum;
+    }
 
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
 
-    public String getProfilePhotoUrl() { return profilePhotoUrl; }
-    public void setProfilePhotoUrl(String profilePhotoUrl) { this.profilePhotoUrl = profilePhotoUrl; }
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(String district) {
+        this.district = district;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getProfilePhotoUrl() {
+        return profilePhotoUrl;
+    }
+
+    public void setProfilePhotoUrl(String profilePhotoUrl) {
+        this.profilePhotoUrl = profilePhotoUrl;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
 }

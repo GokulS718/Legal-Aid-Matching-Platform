@@ -86,6 +86,10 @@ public class Case {
     @Column(name = "documents_url", columnDefinition = "TEXT")
     private String documentsUrl;
 
+    /** When true, assigned lawyers/NGOs can see case documents when viewing case details. */
+    @Column(name = "documents_shared_with_providers", nullable = false, columnDefinition = "boolean default true")
+    private Boolean documentsSharedWithProviders = true;
+
     // Metadata
     @Column(name = "current_step")
     private Integer currentStep = 0;
@@ -185,6 +189,9 @@ public class Case {
 
     public String getDocumentsUrl() { return documentsUrl; }
     public void setDocumentsUrl(String documentsUrl) { this.documentsUrl = documentsUrl; }
+
+    public Boolean getDocumentsSharedWithProviders() { return documentsSharedWithProviders != null ? documentsSharedWithProviders : true; }
+    public void setDocumentsSharedWithProviders(Boolean documentsSharedWithProviders) { this.documentsSharedWithProviders = documentsSharedWithProviders; }
 
     public Integer getCurrentStep() { return currentStep; }
     public void setCurrentStep(Integer currentStep) { this.currentStep = currentStep; }

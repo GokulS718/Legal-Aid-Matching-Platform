@@ -81,6 +81,12 @@
             <artifactId>cloudinary-http44</artifactId>
             <version>1.38.0</version>
         </dependency>
+        
+        <!-- Spring Mail -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
 
         <!-- Lombok -->
         <dependency>

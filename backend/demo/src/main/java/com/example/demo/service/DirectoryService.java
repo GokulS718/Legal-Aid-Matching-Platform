@@ -105,30 +105,22 @@ public class DirectoryService {
 
     // ---------------- SEARCH + DETAILS ----------------
 
-    public Page<DirectoryEntry> search(
-            String type,
-            String name,
-            String state,
-            String district,
-            String specialization,
-            Integer minExperience,
-            int page,
-            int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public org.springframework.data.domain.Page<DirectoryEntry> searchDirectory(String type, String name, String state,
+            String district, String specialization, String ngoSpec, Integer minExperience, int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size,
+                org.springframework.data.domain.Sort.by("id").ascending());
+        String nameFilter = (name != null && !name.isEmpty()) ? "%" + name.toLowerCase() + "%" : null;
+        String districtFilter = (district != null && !district.isEmpty()) ? "%" + district.toLowerCase() + "%" : null;
 
-        // Pad wildcards and lower-case in Java to avoid PostgreSQL lower(bytea)
-        // conflict
-        String namePattern = (name != null) ? "%" + name.trim().toLowerCase() + "%" : null;
-        String districtPattern = (district != null) ? "%" + district.trim().toLowerCase() + "%" : null;
+        // Handle "All" type
+        String typeFilter = (type == null || type.equalsIgnoreCase("All")) ? null : type;
 
-        return repository.searchDirectory(
-                type,
-                namePattern,
-                state,
-                districtPattern,
-                specialization,
-                minExperience,
-                pageable);
+        // Convert empty strings to null for repository
+        String specFilter = (specialization != null && !specialization.isEmpty()) ? specialization : null;
+        String ngoSpecFilter = (ngoSpec != null && !ngoSpec.isEmpty()) ? ngoSpec : null;
+
+        return repository.searchDirectory(typeFilter, nameFilter, state, districtFilter, specFilter, ngoSpecFilter,
+                minExperience, pageable);
     }
 
     public long countTotal() {

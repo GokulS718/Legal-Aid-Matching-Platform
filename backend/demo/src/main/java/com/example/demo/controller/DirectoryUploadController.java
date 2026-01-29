@@ -7,7 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/directory")
-@CrossOrigin(origins = "http://localhost:5173")
+
 public class DirectoryUploadController {
 
     private final DirectoryService directoryService;

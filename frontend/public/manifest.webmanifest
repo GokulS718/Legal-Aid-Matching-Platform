@@ -1,0 +1,16 @@
+{
+  "name": "Legal Aid Matching Platform",
+  "short_name": "Legal Aid",
+  "description": "Legal Aid Matching Platform - Connecting citizens, lawyers, and NGOs",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#D4AF37",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

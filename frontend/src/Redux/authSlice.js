@@ -11,7 +11,7 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await axiosClient.post("/auth/login", credentials);
-      
+
       if (response.data && response.data.token) {
         // Store token and essential data in localStorage
         localStorage.setItem("accessToken", response.data.token);
@@ -19,20 +19,20 @@ export const loginUser = createAsyncThunk(
         localStorage.setItem("username", response.data.username || "");
         localStorage.setItem("role", response.data.role || credentials.role);
         localStorage.setItem("userId", response.data.userId || "");
-        
+
         // Extract userData from response
         const userData = response.data.userData || {};
-        
+
         // Debug: Log the response to see what backend is sending
         console.log("Login Response:", response.data);
         console.log("UserData from backend:", userData);
         console.log("profilePhotoUrl in userData:", userData.profilePhotoUrl);
         console.log("profilePhotoUrl at top level:", response.data.profilePhotoUrl);
-        
+
         // Get profilePhotoUrl from userData or top level of response
         const profilePhotoUrl = userData.profilePhotoUrl || response.data.profilePhotoUrl || null;
         console.log("Extracted profilePhotoUrl:", profilePhotoUrl);
-        
+
         return {
           token: response.data.token,
           email: response.data.email || credentials.username,
@@ -44,7 +44,7 @@ export const loginUser = createAsyncThunk(
           userData: {
             id: userData.id || null,
             fullName: userData.fullName || null,
-            shortName: userData.fullName ? (userData.fullName.includes(" ") 
+            shortName: userData.fullName ? (userData.fullName.includes(" ")
               ? userData.fullName.split(" ")[0] + " " + userData.fullName.split(" ")[userData.fullName.split(" ").length - 1]
               : userData.fullName) : null,
             aadhaar: userData.aadharNum || null,
@@ -78,8 +78,12 @@ export const fetchUserProfile = createAsyncThunk(
   "auth/fetchUserProfile",
   async (_, { rejectWithValue }) => {
     try {
+      const role = localStorage.getItem("role");
+      if (role !== "CITIZEN" && role !== "ADMIN") {
+        return rejectWithValue("Profile fetching not applicable for this role");
+      }
       const response = await axiosClient.get("/profile/me");
-      
+
       if (response.data) {
         return response.data;
       } else {
@@ -108,7 +112,7 @@ export const logoutUser = createAsyncThunk(
       localStorage.removeItem("username");
       localStorage.removeItem("role");
       localStorage.removeItem("userId");
-      
+
       return true;
     } catch (error) {
       return rejectWithValue("Logout failed");
@@ -128,7 +132,7 @@ const initialState = {
     role: localStorage.getItem("role") || null,
     userId: localStorage.getItem("userId") || null,
   },
-  
+
   // User profile data (fetched from backend)
   profile: {
     id: null,
@@ -145,7 +149,7 @@ const initialState = {
     photoUrl: null,
     role: null,
   },
-  
+
   // Loading and error states
   isLoading: false,
   isAuthenticated: !!localStorage.getItem("accessToken"),
@@ -163,18 +167,18 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    
+
     // Update profile data manually (for editing)
     updateProfile: (state, action) => {
       state.profile = { ...state.profile, ...action.payload };
     },
-    
+
     // Set user data (for manual updates)
     setUser: (state, action) => {
       state.user = { ...state.user, ...action.payload };
     },
   },
-  
+
   extraReducers: (builder) => {
     // LOGIN
     builder
@@ -224,7 +228,7 @@ const authSlice = createSlice({
           userId: null,
         };
       });
-    
+
     // FETCH USER PROFILE
     builder
       .addCase(fetchUserProfile.pending, (state) => {
@@ -254,7 +258,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       });
-    
+
     // LOGOUT
     builder
       .addCase(logoutUser.pending, (state) => {

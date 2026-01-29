@@ -59,10 +59,10 @@ const InputField = ({
         onBlur={onBlur}
         disabled={disabled || isLoading}
         className={`block w-full rounded-md border px-3 py-2.5 sm:text-sm focus:outline-none focus:ring-1 shadow-sm ${disabled || isLoading
-            ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-300"
-            : showError
-              ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-              : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+          ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-300"
+          : showError
+            ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+            : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
           }`}
       />
       {showError && <span className="text-red-500 text-sm mt-1">{error}</span>}
@@ -970,8 +970,8 @@ const LawyerForm = () => {
               });
             }}
             className={`block w-full pl-3 pr-10 py-2.5 text-sm border-gray-300 focus:outline-none focus:ring-1 rounded-md shadow-sm border appearance-none ${disabled || isLoading
-                ? "bg-gray-100 cursor-not-allowed opacity-60"
-                : "cursor-pointer focus:ring-blue-500 focus:border-blue-500"
+              ? "bg-gray-100 cursor-not-allowed opacity-60"
+              : "cursor-pointer focus:ring-blue-500 focus:border-blue-500"
               }`}
           >
             <option value="">{`Select ${label.split(" ")[0]}`}</option>
@@ -1001,11 +1001,11 @@ const LawyerForm = () => {
   };
 
   const specializationOptions = [
-    { label: "Criminal Law", value: "CR" },
-    { label: "Civil Law", value: "CV" },
-    { label: "Corporate Law", value: "CO" },
-    { label: "Family Law", value: "FA" },
-    { label: "Property Law", value: "PR" },
+    { label: "Criminal Law", value: "Criminal" },
+    { label: "Civil Law", value: "Civil" },
+    { label: "Corporate Law", value: "Corporate" },
+    { label: "Family Law", value: "Family" },
+    { label: "Property Law", value: "Property" },
   ];
 
   return (
@@ -1224,10 +1224,10 @@ const LawyerForm = () => {
             onBlur={() => handleBlur("address")}
             disabled={isLoading}
             className={`block w-full rounded-md border px-3 py-2.5 sm:text-sm focus:outline-none focus:ring-1 shadow-sm ${isLoading
-                ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-300"
-                : touched.address && errors.address
-                  ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                  : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-300"
+              : touched.address && errors.address
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
               }`}
           />
           {touched.address && errors.address && (
@@ -1406,10 +1406,10 @@ const LawyerForm = () => {
                 onBlur={() => handleBlur("latitude")}
                 disabled={isLoading}
                 className={`block w-full rounded-md border px-3 py-2.5 sm:text-sm focus:outline-none focus:ring-1 shadow-sm ${isLoading
-                    ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-300"
-                    : touched.latitude && errors.latitude
-                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-300"
+                  : touched.latitude && errors.latitude
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   }`}
               />
               {touched.latitude && errors.latitude && (
@@ -1448,10 +1448,10 @@ const LawyerForm = () => {
                 onBlur={() => handleBlur("longitude")}
                 disabled={isLoading}
                 className={`block w-full rounded-md border px-3 py-2.5 sm:text-sm focus:outline-none focus:ring-1 shadow-sm ${isLoading
-                    ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-300"
-                    : touched.longitude && errors.longitude
-                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-300"
+                  : touched.longitude && errors.longitude
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   }`}
               />
               {touched.longitude && errors.longitude && (

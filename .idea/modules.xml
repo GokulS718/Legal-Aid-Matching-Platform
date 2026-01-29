@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Legal-Aid-Matching-Platform-Group-A.iml" filepath="$PROJECT_DIR$/.idea/Legal-Aid-Matching-Platform-Group-A.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Legal-Aid-Matching-Platform-Group-A/backend/demo/demo.iml" filepath="$PROJECT_DIR$/Legal-Aid-Matching-Platform-Group-A/backend/demo/demo.iml" />
     </modules>
   </component>
 </project>

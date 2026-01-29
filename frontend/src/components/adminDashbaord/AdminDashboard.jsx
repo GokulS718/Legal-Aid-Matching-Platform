@@ -3,10 +3,11 @@ import { useSelector, useDispatch } from "react-redux";
 import { fetchUserProfile } from "../../Redux/authSlice.js";
 import AdminSidebar from "./AdminSidebar.jsx";
 import AdminOverview from "./AdminOverview.jsx";
-import AdminUserVerifications from "./AdminUserVerifications.jsx";
+
 import AdminCases from "./AdminCases.jsx";
 import AdminLawyers from "./AdminLawyers.jsx";
 import AdminNGOs from "./AdminNGOs.jsx";
+import AdminAuditLogs from "./AdminAuditLogs.jsx";
 import AdminProfile from "./AdminProfile.jsx";
 import AdminSettings from "./AdminSettings.jsx";
 
@@ -26,7 +27,6 @@ export default function AdminDashboard() {
       !reduxProfile.email &&
       !reduxProfile.fullName
     ) {
-      // Only fetch if we have a token but no profile data
       dispatch(fetchUserProfile());
     }
   }, [dispatch, isAuthenticated, reduxProfile.email, reduxProfile.fullName]);
@@ -36,31 +36,20 @@ export default function AdminDashboard() {
     const checkWidth = () => {
       const width = window.innerWidth;
       setIsMobile(width <= 700);
-      // On mobile, close sidebar by default
       if (width <= 700) {
         setIsSidebarOpen(false);
       } else {
         setIsSidebarOpen(true);
       }
     };
-
-    // Check on mount
     checkWidth();
-
-    // Listen for resize events
     window.addEventListener("resize", checkWidth);
-
     return () => window.removeEventListener("resize", checkWidth);
   }, []);
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const closeSidebar = () => {
-    if (isMobile) {
-      setIsSidebarOpen(false);
-    }
+    if (isMobile) setIsSidebarOpen(false);
   };
 
   // Profile state (editable)
@@ -82,28 +71,25 @@ export default function AdminDashboard() {
   });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
-  // Update profile from Redux when it changes (e.g., after fetching from database)
   useEffect(() => {
     if (reduxProfile && (reduxProfile.email || reduxProfile.fullName)) {
       setAdminProfile((prev) => ({
         ...prev,
+        ...reduxProfile,
         shortName: reduxProfile.shortName || reduxProfile.fullName || prev.shortName,
-        fullName: reduxProfile.fullName || prev.fullName,
-        role: reduxProfile.role || prev.role,
-        aadhaar: reduxProfile.aadhaar || prev.aadhaar,
-        email: reduxProfile.email || prev.email,
-        mobile: reduxProfile.mobile || prev.mobile,
-        dob: reduxProfile.dob || prev.dob,
-        state: reduxProfile.state || prev.state,
-        district: reduxProfile.district || prev.district,
-        city: reduxProfile.city || prev.city,
-        address: reduxProfile.address || prev.address,
-        photoUrl: reduxProfile.photoUrl || prev.photoUrl,
       }));
     }
   }, [reduxProfile]);
 
-  // Profile data for sidebar display (from Redux profile)
+  useEffect(() => {
+    const handleNavigation = (e) => {
+      const page = e.detail?.page;
+      if (page) setActivePage(page);
+    };
+    window.addEventListener('navigateDashboard', handleNavigation);
+    return () => window.removeEventListener('navigateDashboard', handleNavigation);
+  }, []);
+
   const profile = {
     fullName: reduxProfile?.fullName || adminProfile.fullName || "Admin User",
     shortName: reduxProfile?.shortName || reduxProfile?.fullName?.split(" ")[0] || adminProfile.shortName || adminProfile.fullName?.split(" ")[0] || "Admin",
@@ -112,31 +98,24 @@ export default function AdminDashboard() {
 
   const getPageTitle = () => {
     switch (activePage) {
-      case "overview":
-        return "Overview";
-      case "verifications":
-        return "User Verifications";
-      case "cases":
-        return "Cases";
-      case "lawyers":
-        return "Lawyers";
-      case "ngos":
-        return "NGOs";
-      case "profile":
-        return "My Profile";
-      case "settings":
-        return "Settings";
-      default:
-        return "Dashboard";
+      case "overview": return "Overview";
+
+      case "cases": return "Cases";
+      case "lawyers": return "Lawyers";
+      case "ngos": return "NGOs";
+      case "audit-logs": return "Audit Logs";
+      case "profile": return "My Profile";
+      case "settings": return "Settings";
+      default: return "Dashboard";
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-[#f8f7fa] relative">
+    <div className="dashboard-container relative">
       {/* Mobile Overlay */}
       {isMobile && isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          className="fixed inset-0 bg-black bg-opacity-70 dark:bg-opacity-80 z-40 backdrop-blur-sm transition-all"
           onClick={closeSidebar}
         />
       )}
@@ -152,73 +131,57 @@ export default function AdminDashboard() {
       />
 
       {/* Main Content */}
-      <main className="flex-1 p-4 md:p-8">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top bar */}
-        <div className="flex justify-between items-center mb-6">
-          {/* Mobile Menu Button */}
-          {isMobile && (
-            <button
-              onClick={toggleSidebar}
-              className="p-2 rounded-md hover:bg-[#BEC0C2] mr-2 cursor-pointer"
-              aria-label="Toggle sidebar"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
-          )}
+        <header className="bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-lg border-b border-gray-200 dark:border-[#222] p-4 flex justify-between items-center sticky top-0 z-20 shadow-lg px-8 transition-colors">
+          <div className="flex items-center gap-2">
+            {isMobile && (
+              <button onClick={toggleSidebar} className="p-2 rounded-lg bg-gray-100 dark:bg-[#1a1a1a] text-[#D4AF37] border border-gray-200 dark:border-[#333] transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            )}
+            <h1 className="text-xl md:text-2xl font-bold font-serif tracking-tight text-gray-900 dark:text-white uppercase transition-colors">
+              {getPageTitle()}
+            </h1>
+          </div>
 
-          <h1 className="text-xl md:text-2xl font-semibold flex-1">
-            {getPageTitle()}
-          </h1>
-
-          <div className="flex items-center gap-3">
-            <div className="text-sm opacity-80 hidden sm:block">
-              {profile.shortName || profile.fullName || "Admin"}
+          <div className="flex items-center gap-6">
+            <div className="hidden sm:block text-right transition-colors">
+              <div className="font-bold text-sm text-gray-900 dark:text-white transition-colors">{profile.shortName || profile.fullName || "Admin"}</div>
+              <div className="text-[10px] text-[#D4AF37] font-bold uppercase tracking-widest">Administrator</div>
             </div>
-            <div className="w-10 h-10 bg-[#BEC0C2] rounded-full flex items-center justify-center overflow-hidden border-2 border-[#AAAAAA]">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 border-[#D4AF37]/50 bg-gray-100 dark:bg-[#1a1a1a] shadow-lg shadow-[#D4AF37]/10 overflow-hidden transition-colors">
               {profile.photoUrl ? (
-                <img
-                  src={profile.photoUrl}
-                  alt={profile.fullName || "Admin"}
-                  className="w-full h-full object-cover"
-                />
+                <img src={profile.photoUrl} alt={profile.fullName || "Admin"} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-gray-600 font-semibold">
-                  {profile.shortName?.charAt(0) || profile.fullName?.charAt(0) || "A"}
-                </span>
+                <span className="text-[#D4AF37]">{profile.shortName?.charAt(0) || "A"}</span>
               )}
             </div>
           </div>
-        </div>
+        </header>
 
         {/* Page Content */}
-        <section className="space-y-6">
-          {activePage === "overview" && <AdminOverview />}
-          {activePage === "verifications" && <AdminUserVerifications />}
-          {activePage === "cases" && <AdminCases />}
-          {activePage === "lawyers" && <AdminLawyers />}
-          {activePage === "ngos" && <AdminNGOs />}
-          {activePage === "profile" && (
-            <AdminProfile
-              profile={adminProfile}
-              setProfile={setAdminProfile}
-              isEditingProfile={isEditingProfile}
-              setIsEditingProfile={setIsEditingProfile}
-            />
-          )}
-          {activePage === "settings" && <AdminSettings />}
-        </section>
+        <div className="flex-1 p-8 overflow-y-auto custom-scrollbar pb-20">
+          <section className="space-y-6 max-w-7xl mx-auto">
+            {activePage === "overview" && <AdminOverview />}
+
+            {activePage === "cases" && <AdminCases />}
+            {activePage === "lawyers" && <AdminLawyers />}
+            {activePage === "ngos" && <AdminNGOs />}
+            {activePage === "audit-logs" && <AdminAuditLogs />}
+            {activePage === "profile" && (
+              <AdminProfile
+                profile={adminProfile}
+                setProfile={setAdminProfile}
+                isEditingProfile={isEditingProfile}
+                setIsEditingProfile={setIsEditingProfile}
+              />
+            )}
+            {activePage === "settings" && <AdminSettings />}
+          </section>
+        </div>
       </main>
     </div>
   );

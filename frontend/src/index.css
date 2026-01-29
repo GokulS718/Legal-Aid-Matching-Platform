@@ -1,10 +1,114 @@
-/* @tailwind base;
-@tailwind components;
-@tailwind utilities; */
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
 @import "leaflet/dist/leaflet.css";
+@import "tailwindcss";
+@config "../tailwind.config.cjs";
 
-/* 
+@variant dark (&:where(.dark, .dark *));
+
+/* Theme-Aware Variables */
+:root {
+    --bg-primary: #fffcf2;
+    --text-primary: #111111;
+    --border-primary: #e5e7eb;
+    --card-bg: #ffffff;
+}
+
+.dark {
+    --bg-primary: #0a0a0a;
+    --text-primary: #d1d5db;
+    --border-primary: #333;
+    --card-bg: #1a1a1a;
+}
+
+/* Global Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-primary);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #D4AF37;
+}
+
+/* Custom Scrollbar for Containers */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--border-primary);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #D4AF37;
+}
+
 body {
-    @apply bg-gray-50 text-gray-800;
-} */
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    @apply transition-colors duration-300;
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-serif {
+    font-family: 'Playfair Display', serif !important;
+}
+
+/* Utility Classes for Theme */
+.dashboard-container {
+    @apply min-h-screen flex overflow-hidden transition-colors duration-300;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.card-premium {
+    @apply rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:border-[#D4AF37]/30;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-primary);
+}
+
+/* Animation utilities */
+.animate-spin-slow {
+    animation: spin 8s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive Overrides */
+@media (max-width: 768px) {
+    .dashboard-container {
+        @apply flex-col;
+    }
+}
+
+/* Gold Date Picker Indicator - Global Override */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(76%) sepia(26%) saturate(996%) hue-rotate(2deg) brightness(94%) contrast(88%);
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(76%) sepia(26%) saturate(996%) hue-rotate(2deg) brightness(94%) contrast(88%);
+}

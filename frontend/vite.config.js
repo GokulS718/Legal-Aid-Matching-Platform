@@ -9,6 +9,10 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  define: {
+    // Polyfill for Node.js global variable (required by sockjs-client)
+    global: 'globalThis',
+  },
   server: {
     // For client-side routing with BrowserRouter
     // Vite handles this automatically, but we can be explicit

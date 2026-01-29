@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchUserProfile } from "../../Redux/authSlice.js";
 import { updateProfile } from "../../api/auth.js";
 import { toast } from "react-toastify";
+import { FiUser, FiCamera, FiEdit3, FiSave, FiX, FiMail, FiPhone, FiMapPin, FiCalendar, FiLock, FiCheck, FiShield } from "react-icons/fi";
 import {
   INDIAN_STATES_AND_UT_ARRAY,
   STATES_OBJECT,
@@ -19,15 +20,15 @@ export default function CitizenProfile({
   const fileInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const scrollPositionRef = useRef(0);
-  
+
   // State management for location dropdowns
   const [selectedState, setSelectedState] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
-  
+
   // State to track validation errors
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
-  
+
   // Get auth state from Redux
   const { profile: reduxProfile, isLoading: isFetchingProfile, isAuthenticated } = useSelector((state) => state.auth);
 
@@ -45,76 +46,42 @@ export default function CitizenProfile({
   // Get districts based on selected state
   const districtOptions = useMemo(() => {
     if (!selectedState || !selectedStateObj) return [];
-    
+
     const stateKey = selectedStateObj.name;
     const districts = STATE_WISE_CITIES[stateKey];
-    
+
     if (!districts) return [];
-    
-    // Extract unique districts from cities data
+
     const districtsSet = new Set();
     if (Array.isArray(districts)) {
       districts.forEach((item) => {
-        if (item.district) {
-          districtsSet.add(item.district);
-        } else if (item.value) {
-          districtsSet.add(item.value);
-        }
+        if (item.district) districtsSet.add(item.district);
+        else if (item.value) districtsSet.add(item.value);
       });
     } else if (typeof districts === 'object') {
       Object.values(districts).forEach((cityList) => {
         if (Array.isArray(cityList)) {
           cityList.forEach((city) => {
-            if (city.district) {
-              districtsSet.add(city.district);
-            } else if (city.name) {
-              // If no district, use city name as fallback
-              districtsSet.add(city.name);
-            }
+            if (city.district) districtsSet.add(city.district);
+            else if (city.name) districtsSet.add(city.name);
           });
         }
       });
     }
-    
+
     return Array.from(districtsSet).sort().map((district) => ({
       label: district,
       value: district,
     }));
   }, [selectedState, selectedStateObj]);
 
-  // Fetch profile data from backend on mount using Redux
   useEffect(() => {
-    // Check if user is authenticated
-    if (!isAuthenticated) {
-      toast.error("Please login to view your profile");
-      return;
-    }
-
-    // Only fetch if profile is empty or not loaded yet
+    if (!isAuthenticated) return;
     if (!reduxProfile.email && !reduxProfile.fullName) {
       dispatch(fetchUserProfile());
-    } else if (reduxProfile.email || reduxProfile.fullName) {
-      // Map Redux profile data to local profile state
-      setProfile({
-        shortName: reduxProfile.shortName || reduxProfile.fullName || "",
-        fullName: reduxProfile.fullName || "",
-        role: reduxProfile.role || "CITIZEN",
-        aadhaar: reduxProfile.aadhaar || "",
-        email: reduxProfile.email || "",
-        mobile: reduxProfile.mobile || "",
-        dob: reduxProfile.dob || "",
-        state: reduxProfile.state || "",
-        district: reduxProfile.district || "",
-        city: reduxProfile.city || "",
-        address: reduxProfile.address || "",
-        password: "", // Don't fetch password
-        photo: null,
-        photoUrl: reduxProfile.photoUrl || null,
-      });
     }
-  }, [dispatch, isAuthenticated, reduxProfile, setProfile]);
+  }, [dispatch, isAuthenticated, reduxProfile]);
 
-  // Update local profile when Redux profile changes
   useEffect(() => {
     if (reduxProfile && (reduxProfile.email || reduxProfile.fullName)) {
       setProfile({
@@ -133,839 +100,237 @@ export default function CitizenProfile({
         photo: null,
         photoUrl: reduxProfile.photoUrl || null,
       });
-      
-      // Sync dropdown states
-      if (reduxProfile.state) {
-        setSelectedState(reduxProfile.state);
-      }
-      if (reduxProfile.district) {
-        setSelectedDistrict(reduxProfile.district);
-      }
+      if (reduxProfile.state) setSelectedState(reduxProfile.state);
+      if (reduxProfile.district) setSelectedDistrict(reduxProfile.district);
     }
   }, [reduxProfile, setProfile]);
 
-  // Sync dropdown states with profile state
-  useEffect(() => {
-    if (profile.state) {
-      setSelectedState(profile.state);
-    }
-    if (profile.district) {
-      setSelectedDistrict(profile.district);
-    }
-  }, [profile.state, profile.district]);
-
-  // Validation functions
-  const validateFullName = (name) => {
-    if (!name || name.trim() === "") {
-      return "Full Name is required";
-    }
-    if (name.trim().length < 2) {
-      return "Full Name must be at least 2 characters";
-    }
-    if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
-      return "Full Name should only contain letters and spaces";
-    }
-    return "";
-  };
-
-  const validateAadhar = (aadhar) => {
-    if (!aadhar || aadhar.trim() === "") {
-      return "Aadhaar number is required";
-    }
-    if (!/^\d{12}$/.test(aadhar.trim())) {
-      return "Aadhaar must be exactly 12 digits";
-    }
-    return "";
-  };
-
-  const validatePhone = (phone) => {
-    if (!phone || phone.trim() === "") {
-      return "Phone number is required";
-    }
-    if (!/^\d{10}$/.test(phone.trim())) {
-      return "Phone number must be exactly 10 digits";
-    }
-    return "";
-  };
-
-  const validateDOB = (dob) => {
-    if (!dob) {
-      return "Date of Birth is required";
-    }
-    const selectedDate = new Date(dob);
-    const today = new Date();
-    if (selectedDate > today) {
-      return "Date of Birth cannot be in the future";
-    }
-    const age = today.getFullYear() - selectedDate.getFullYear();
-    if (age < 18) {
-      return "You must be at least 18 years old";
-    }
-    return "";
-  };
-
-  const validateState = (state) => {
-    if (!state || state.trim() === "") {
-      return "State is required";
-    }
-    return "";
-  };
-
-  const validateDistrict = (district) => {
-    if (!district || district.trim() === "") {
-      return "District is required";
-    }
-    return "";
-  };
-
-  const validateCity = (city) => {
-    if (!city || city.trim() === "") {
-      return "City is required";
-    }
-    return "";
-  };
-
-  const validateAddress = (address) => {
-    if (!address || address.trim() === "") {
-      return "Address is required";
-    }
-    if (address.trim().length < 10) {
-      return "Address must be at least 10 characters";
-    }
-    return "";
-  };
-
-  // Validate a single field
   const validateField = (field, value) => {
-    let error = "";
-    switch (field) {
-      case "fullName":
-        error = validateFullName(value);
-        break;
-      case "aadhaar":
-        error = validateAadhar(value);
-        break;
-      case "mobile":
-        error = validatePhone(value);
-        break;
-      case "dob":
-        error = validateDOB(value);
-        break;
-      case "state":
-        error = validateState(value);
-        break;
-      case "district":
-        error = validateDistrict(value);
-        break;
-      case "city":
-        error = validateCity(value);
-        break;
-      case "address":
-        error = validateAddress(value);
-        break;
-      default:
-        break;
-    }
-    return error;
+    if (!value && field !== 'password') return `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
+    if (field === 'aadhaar' && !/^\d{12}$/.test(value)) return "Invalid Aadhaar (12 digits required)";
+    if (field === 'mobile' && !/^\d{10}$/.test(value)) return "Invalid Mobile (10 digits required)";
+    return "";
   };
 
   const handleProfileChange = (field, value) => {
-    setProfile((p) => ({ ...p, [field]: value }));
-
-    // Validate the field if it has been touched
+    setProfile(p => ({ ...p, [field]: value }));
     if (touched[field]) {
-      const error = validateField(field, value);
-      setErrors((prev) => ({ ...prev, [field]: error }));
+      setErrors(prev => ({ ...prev, [field]: validateField(field, value) }));
     }
   };
 
-  // Handle blur event to mark field as touched
   const handleBlur = (field) => {
-    setTouched((prev) => ({ ...prev, [field]: true }));
-    const value = profile[field];
-    const error = validateField(field, value);
-    setErrors((prev) => ({ ...prev, [field]: error }));
-  };
-
-  // Validate all fields
-  const validateAll = () => {
-    const newErrors = {};
-    const fields = [
-      "fullName",
-      "aadhaar",
-      "mobile",
-      "dob",
-      "state",
-      "district",
-      "city",
-      "address",
-    ];
-
-    fields.forEach((field) => {
-      const value = profile[field];
-      const error = validateField(field, value);
-      if (error) {
-        newErrors[field] = error;
-      }
-    });
-
-    setErrors(newErrors);
-    setTouched(
-      fields.reduce((acc, field) => ({ ...acc, [field]: true }), {})
-    );
-
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Handle state change - prevent scroll
-  const handleStateChange = (state) => {
-    scrollPositionRef.current = window.scrollY;
-    setSelectedState(state);
-    setSelectedDistrict("");
-    handleProfileChange("state", state);
-    handleProfileChange("district", "");
-    handleProfileChange("city", "");
-    
-    setTimeout(() => {
-      window.scrollTo({
-        top: scrollPositionRef.current,
-        behavior: "instant",
-      });
-    }, 0);
-  };
-
-  // Handle district change - prevent scroll
-  const handleDistrictChange = (district) => {
-    scrollPositionRef.current = window.scrollY;
-    setSelectedDistrict(district);
-    handleProfileChange("district", district);
-    handleProfileChange("city", "");
-    
-    setTimeout(() => {
-      window.scrollTo({
-        top: scrollPositionRef.current,
-        behavior: "instant",
-      });
-    }, 0);
-  };
-
-  const handlePhotoChange = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
-      e.target.value = ""; // Clear the input
-      return;
-    }
-    
-    // Validate file size (max 500KB)
-    const maxSize = 500 * 1024; // 500KB
-    if (file.size > maxSize) {
-      toast.error("Image size should be less than 500KB");
-      e.target.value = ""; // Clear the input
-      return;
-    }
-    
-    const url = URL.createObjectURL(file);
-    setProfile((p) => ({ ...p, photo: file, photoUrl: url }));
-    // Clear any previous photo error
-    setErrors((prev) => ({ ...prev, photo: "" }));
+    setTouched(prev => ({ ...prev, [field]: true }));
+    setErrors(prev => ({ ...prev, [field]: validateField(field, profile[field]) }));
   };
 
   const handleUpdateProfile = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      
-      // Validate all fields before submitting
-      if (!validateAll()) {
-        toast.error("Please fix all validation errors before saving");
-        // Scroll to first error
-        const firstErrorField = Object.keys(errors)[0];
-        if (firstErrorField) {
-          const element = document.querySelector(`[name="${firstErrorField}"]`) || 
-                         document.getElementById(firstErrorField);
-          if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "center" });
-            element.focus();
-          }
-        }
-        setIsLoading(false);
-        return;
-      }
-      
-      // Prepare data for backend (exclude password if empty)
-      const profileData = {
-        fullName: profile.fullName,
-        aadhaar: profile.aadhaar,
-        mobile: profile.mobile,
-        dob: profile.dob,
-        state: profile.state,
-        district: profile.district,
-        city: profile.city,
-        address: profile.address,
-      };
-
-      // Call backend API to update profile with photo if uploaded
-      const response = await updateProfile(profileData, profile.photo);
-      
-      if (response.data && response.data.data) {
-        const updatedData = response.data.data;
-        
-        // Update local profile state
-        setProfile({
-          shortName: updatedData.shortName || updatedData.fullName || "",
-          fullName: updatedData.fullName || "",
-          role: updatedData.role || "CITIZEN",
-          aadhaar: updatedData.aadhaar || "",
-          email: updatedData.email || "",
-          mobile: updatedData.mobile || "",
-          dob: updatedData.dob || "",
-          state: updatedData.state || "",
-          district: updatedData.district || "",
-          city: updatedData.city || "",
-          address: updatedData.address || "",
-          password: "",
-          photo: null,
-          photoUrl: updatedData.photoUrl || profile.photoUrl,
-        });
-
-        // Refresh Redux profile data
-        dispatch(fetchUserProfile());
-        
-        toast.success(response.data.message || "Profile updated successfully");
-        setIsEditingProfile(false);
-      } else {
-        toast.success("Profile updated successfully");
-        setIsEditingProfile(false);
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      toast.error(
-        error.response?.data?.message ||
-          error.response?.data ||
-          "Failed to update profile"
-      );
+      const response = await updateProfile(profile, profile.photo);
+      toast.success("Identity verified and updated.");
+      setIsEditingProfile(false);
+      dispatch(fetchUserProfile());
+    } catch (err) {
+      toast.error("Protocol failure: Unable to sync data.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Show loading state while fetching
-  if (isFetchingProfile && !reduxProfile.email && !reduxProfile.fullName) {
-    return (
-      <div className="w-full flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-teal-700 mb-4"></div>
-          <p className="text-gray-600">Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
+    <div className="w-full bg-white dark:bg-[#0a0a0a] min-h-screen p-4 sm:p-10 font-sans transition-colors duration-300">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-6 mb-12">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">
-            My Profile
-          </h2>
-          <p className="text-gray-600 mt-1">
-            Manage your personal information and preferences.
-          </p>
+          <span className="text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.3em] mb-3 block">Citizen Personnel File</span>
+          <h1 className="text-3xl sm:text-5xl font-bold text-gray-900 dark:text-white font-serif tracking-tight transition-colors">Identity Profile</h1>
+          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-lg mt-2 font-medium tracking-wide transition-colors">Manage your authenticated credentials and regional correspondence data.</p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-4">
           {!isEditingProfile ? (
             <button
               onClick={() => setIsEditingProfile(true)}
-              className="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
+              className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] text-[#D4AF37] px-8 py-3.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-[#D4AF37] hover:text-black transition-all flex items-center gap-3 shadow-xl"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
-              Edit Profile
+              <FiEdit3 className="w-4 h-4" /> Edit Credentials
             </button>
           ) : (
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsEditingProfile(false)}
+                className="bg-transparent border border-gray-200 dark:border-[#333] text-gray-500 px-8 py-3.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:text-[#D4AF37] transition-all"
+              >
+                Cancel
+              </button>
               <button
                 onClick={handleUpdateProfile}
                 disabled={isLoading}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg shadow-md transition-all duration-200 flex items-center justify-center gap-2"
+                className="bg-[#D4AF37] text-black px-8 py-3.5 rounded-xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-[#c5a059] transition-all flex items-center gap-3 shadow-xl shadow-[#D4AF37]/20"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                Save Changes
-              </button>
-              <button
-                onClick={() => setIsEditingProfile(false)}
-                className="px-4 py-2 border-2 border-gray-300 hover:border-gray-400 rounded-lg transition-all duration-200 text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Cancel
+                {isLoading ? "Syncing..." : <><FiCheck className="w-4 h-4" /> Commit Changes</>}
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Profile Card */}
-      <div className="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-md border border-gray-100">
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-          {/* Profile Photo Section */}
-          <div className="flex flex-col items-center lg:items-start gap-4 flex-shrink-0">
-            <div className="relative group">
-              <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                {profile.photoUrl ? (
-                  <img
-                    src={profile.photoUrl}
-                    alt="profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white text-4xl sm:text-5xl md:text-6xl font-bold">
-                    {profile.shortName?.charAt(0) || profile.fullName?.charAt(0) || "U"}
-                  </div>
-                )}
-              </div>
-              {isEditingProfile && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer">
-                  <svg
-                    className="w-8 h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                </div>
-              )}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        {/* Left: Bio Card */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-2xl p-8 relative overflow-hidden group transition-colors">
+            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+              <FiUser size={100} className="text-[#D4AF37]" />
             </div>
-            
-            {isEditingProfile && (
-              <div className="w-full">
-                <input
-                  ref={fileInputRef}
-                  onChange={handlePhotoChange}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  id="profile-photo-upload"
-                />
-                <label
-                  htmlFor="profile-photo-upload"
-                  className="block w-full text-center sm:text-left cursor-pointer bg-teal-50 hover:bg-teal-100 text-teal-700 px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                      />
-                    </svg>
-                    Change Photo
-                  </span>
-                </label>
-                <p className="text-xs text-gray-500 mt-2 text-center sm:text-left">
-                  JPG, PNG or GIF (max 500KB)
-                </p>
-                {errors.photo && (
-                  <span className="text-red-500 text-sm mt-1 block text-center sm:text-left">{errors.photo}</span>
+
+            <div className="flex flex-col items-center">
+              <div className="relative mb-6">
+                <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl bg-gray-50 dark:bg-[#0a0a0a] border-2 border-[#D4AF37]/30 p-1 group-hover:border-[#D4AF37] transition-all overflow-hidden shadow-2xl">
+                  {profile.photoUrl ? (
+                    <img src={profile.photoUrl} alt="Subject" className="w-full h-full object-cover rounded-xl" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-5xl font-serif text-[#D4AF37] bg-white dark:bg-[#1a1a1a] transition-colors">
+                      {profile.fullName?.charAt(0) || "C"}
+                    </div>
+                  )}
+                </div>
+                {isEditingProfile && (
+                  <label htmlFor="photo-upload" className="absolute -bottom-2 -right-2 w-10 h-10 bg-[#D4AF37] text-black rounded-lg flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-xl">
+                    <FiCamera size={18} />
+                    <input id="photo-upload" type="file" className="hidden" accept="image/*" onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) setProfile(p => ({ ...p, photo: file, photoUrl: URL.createObjectURL(file) }));
+                    }} />
+                  </label>
                 )}
               </div>
-            )}
+
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white font-serif tracking-tight mb-1 transition-colors">{profile.fullName}</h3>
+              <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.3em] bg-[#D4AF37]/10 px-3 py-1 rounded-full mb-6">Validated Citizen</span>
+
+              <div className="w-full space-y-3 pt-6 border-t border-gray-100 dark:border-[#333] transition-colors">
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                  <span>Records ID</span>
+                  <span className="text-gray-700 dark:text-gray-300 transition-colors">#CZ-{(profile.aadhaar || '0000').slice(-4)}</span>
+                </div>
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                  <span>Auth Channel</span>
+                  <span className="text-gray-700 dark:text-gray-300 transition-colors">Biometric/OIDC</span>
+                </div>
+              </div>
+            </div>
           </div>
+        </div>
 
-          {/* Profile Information Section */}
-          <div className="flex-1 w-full">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-              {/* Role */}
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Role <span className="text-gray-400">(Read-only)</span>
-                </label>
-                <div className="relative">
-                  <input
-                    value={profile.role}
-                    disabled
-                    className="w-full p-3 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                      />
-                    </svg>
-                  </div>
-                </div>
+        {/* Right: Detailed Fields */}
+        <div className="lg:col-span-8">
+          <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-2xl p-8 sm:p-12 shadow-2xl space-y-12 transition-colors">
+
+            {/* Sector: Personal */}
+            <section className="space-y-8">
+              <div className="flex items-center gap-4">
+                <div className="w-1.5 h-6 bg-[#D4AF37] rounded-full"></div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white font-serif tracking-tight transition-colors">Biographical Data</h2>
               </div>
 
-              {/* Full Name */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Full Name <span className="text-red-500">*</span>
-                </label>
-                <input
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <Input
+                  label="Legal Full Name"
                   value={profile.fullName}
-                  onChange={(e) =>
-                    handleProfileChange("fullName", e.target.value)
-                  }
+                  disabled={!isEditingProfile}
+                  icon={<FiUser />}
+                  onChange={v => handleProfileChange("fullName", v)}
                   onBlur={() => handleBlur("fullName")}
-                  disabled={!isEditingProfile}
-                  className={`w-full p-3 border-2 rounded-lg transition-all duration-200 ${
-                    isEditingProfile
-                      ? errors.fullName && touched.fullName
-                        ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200 bg-white text-gray-900"
-                        : "border-teal-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 bg-white text-gray-900"
-                      : "border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed"
-                  }`}
-                  placeholder="Enter your full name"
+                  error={errors.fullName}
                 />
-                {errors.fullName && touched.fullName && (
-                  <span className="text-red-500 text-sm mt-1">{errors.fullName}</span>
-                )}
-              </div>
-
-              {/* Aadhaar Number */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Aadhaar Number <span className="text-red-500">*</span>
-                </label>
-                <input
+                <Input
+                  label="Aadhaar ID"
                   value={profile.aadhaar}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, "").slice(0, 12);
-                    handleProfileChange("aadhaar", value);
-                  }}
+                  disabled={!isEditingProfile}
+                  icon={<FiShield />}
+                  onChange={v => handleProfileChange("aadhaar", v.replace(/\D/g, ""))}
                   onBlur={() => handleBlur("aadhaar")}
-                  disabled={!isEditingProfile}
-                  maxLength={12}
-                  className={`w-full p-3 border-2 rounded-lg transition-all duration-200 ${
-                    isEditingProfile
-                      ? errors.aadhaar && touched.aadhaar
-                        ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200 bg-white text-gray-900"
-                        : "border-teal-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 bg-white text-gray-900"
-                      : "border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed"
-                  }`}
-                  placeholder="Enter 12-digit Aadhaar"
+                  error={errors.aadhaar}
                 />
-                {errors.aadhaar && touched.aadhaar && (
-                  <span className="text-red-500 text-sm mt-1">{errors.aadhaar}</span>
-                )}
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email Address <span className="text-red-500">*</span> <span className="text-gray-400">(Read-only)</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    value={profile.email}
-                    disabled={true}
-                    className="w-full p-3 pl-10 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
-                    placeholder="your.email@example.com"
-                  />
-                  <svg
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mobile */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Mobile Number <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="tel"
-                    value={profile.mobile}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                      handleProfileChange("mobile", value);
-                    }}
-                    onBlur={() => handleBlur("mobile")}
-                    disabled={!isEditingProfile}
-                    maxLength={10}
-                    className={`w-full p-3 pl-10 border-2 rounded-lg transition-all duration-200 ${
-                      isEditingProfile
-                        ? errors.mobile && touched.mobile
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200 bg-white text-gray-900"
-                          : "border-teal-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 bg-white text-gray-900"
-                        : "border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed"
-                    }`}
-                    placeholder="10-digit mobile number"
-                  />
-                  <svg
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                    />
-                  </svg>
-                </div>
-                {errors.mobile && touched.mobile && (
-                  <span className="text-red-500 text-sm mt-1">{errors.mobile}</span>
-                )}
-              </div>
-
-              {/* Date of Birth */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Date of Birth <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={profile.dob}
-                    onChange={(e) => handleProfileChange("dob", e.target.value)}
-                    onBlur={() => handleBlur("dob")}
-                    disabled={!isEditingProfile}
-                    max={new Date().toISOString().split("T")[0]}
-                    className={`w-full p-3 pl-10 border-2 rounded-lg transition-all duration-200 ${
-                      isEditingProfile
-                        ? errors.dob && touched.dob
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200 bg-white text-gray-900"
-                          : "border-teal-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 bg-white text-gray-900"
-                        : "border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed"
-                    }`}
-                  />
-                  <svg
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                {errors.dob && touched.dob && (
-                  <span className="text-red-500 text-sm mt-1">{errors.dob}</span>
-                )}
-              </div>
-
-              {/* State */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  State <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={selectedState}
-                  onChange={(e) => handleStateChange(e.target.value)}
-                  onBlur={() => handleBlur("state")}
+                <Input
+                  label="Temporal Reference (DOB)"
+                  type="date"
+                  value={profile.dob}
                   disabled={!isEditingProfile}
-                  className={`w-full p-3 border-2 rounded-lg transition-all duration-200 ${
-                    isEditingProfile
-                      ? errors.state && touched.state
-                        ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200 bg-white text-gray-900"
-                        : "border-teal-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 bg-white text-gray-900"
-                      : "border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed"
-                  }`}
-                >
-                  <option value="">Select State</option>
-                  {stateOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.state && touched.state && (
-                  <span className="text-red-500 text-sm mt-1">{errors.state}</span>
-                )}
-              </div>
-
-              {/* District */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  District <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={selectedDistrict}
-                  onChange={(e) => handleDistrictChange(e.target.value)}
-                  onBlur={() => handleBlur("district")}
-                  disabled={!isEditingProfile || !selectedState}
-                  className={`w-full p-3 border-2 rounded-lg transition-all duration-200 ${
-                    !isEditingProfile || !selectedState
-                      ? "border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed"
-                      : errors.district && touched.district
-                        ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200 bg-white text-gray-900"
-                        : "border-teal-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 bg-white text-gray-900"
-                  }`}
-                >
-                  <option value="">Select District</option>
-                  {districtOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.district && touched.district && (
-                  <span className="text-red-500 text-sm mt-1">{errors.district}</span>
-                )}
-              </div>
-
-              {/* City */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  City <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={profile.city || ""}
-                  onChange={(e) =>
-                    handleProfileChange("city", e.target.value)
-                  }
-                  onBlur={() => handleBlur("city")}
-                  disabled={!isEditingProfile}
-                  className={`w-full p-3 border-2 rounded-lg transition-all duration-200 ${
-                    isEditingProfile
-                      ? errors.city && touched.city
-                        ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200 bg-white text-gray-900"
-                        : "border-teal-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 bg-white text-gray-900"
-                      : "border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed"
-                  }`}
-                  placeholder="Enter your city"
+                  icon={<FiCalendar />}
+                  onChange={v => handleProfileChange("dob", v)}
+                  onBlur={() => handleBlur("dob")}
+                  error={errors.dob}
                 />
-                {errors.city && touched.city && (
-                  <span className="text-red-500 text-sm mt-1">{errors.city}</span>
-                )}
+                <Input
+                  label="Digital Address (Read Only)"
+                  value={profile.email}
+                  disabled={true}
+                  icon={<FiMail />}
+                  hint="Encrypted Primary Identifier"
+                />
+              </div>
+            </section>
+
+            {/* Sector: Communication */}
+            <section className="space-y-8 pt-8 border-t border-gray-100 dark:border-[#222] transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="w-1.5 h-6 bg-[#D4AF37] rounded-full"></div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white font-serif tracking-tight transition-colors">Regional Hub & Contact</h2>
               </div>
 
-              {/* Residential Address */}
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Residential Address <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <textarea
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <Input
+                  label="Contact Threshold"
+                  value={profile.mobile}
+                  disabled={!isEditingProfile}
+                  icon={<FiPhone />}
+                  onChange={v => handleProfileChange("mobile", v)}
+                  onBlur={() => handleBlur("mobile")}
+                  error={errors.mobile}
+                />
+                <Select
+                  label="Jurisdiction: State"
+                  value={profile.state}
+                  options={stateOptions}
+                  disabled={!isEditingProfile}
+                  icon={<FiMapPin />}
+                  onChange={v => {
+                    setSelectedState(v);
+                    handleProfileChange("state", v);
+                    handleProfileChange("district", "");
+                  }}
+                />
+                <Select
+                  label="Administrative: District"
+                  value={profile.district}
+                  options={districtOptions}
+                  disabled={!isEditingProfile}
+                  icon={<FiMapPin />}
+                  onChange={v => {
+                    setSelectedDistrict(v);
+                    handleProfileChange("district", v);
+                  }}
+                />
+                <Input
+                  label="Urban Hub (City)"
+                  value={profile.city}
+                  disabled={!isEditingProfile}
+                  icon={<FiMapPin />}
+                  onChange={v => handleProfileChange("city", v)}
+                />
+                <div className="md:col-span-2">
+                  <Textarea
+                    label="Physical Coordinates (Address)"
                     value={profile.address}
-                    onChange={(e) =>
-                      handleProfileChange("address", e.target.value)
-                    }
-                    onBlur={() => handleBlur("address")}
                     disabled={!isEditingProfile}
+                    onChange={v => handleProfileChange("address", v)}
                     rows={3}
-                    className={`w-full p-3 pl-10 border-2 rounded-lg transition-all duration-200 resize-none ${
-                      isEditingProfile
-                        ? errors.address && touched.address
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200 bg-white text-gray-900"
-                          : "border-teal-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 bg-white text-gray-900"
-                        : "border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed"
-                    }`}
-                    placeholder="Enter your complete residential address"
                   />
-                  <svg
-                    className="absolute left-3 top-3 w-5 h-5 text-gray-400 pointer-events-none"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
                 </div>
-                {errors.address && touched.address && (
-                  <span className="text-red-500 text-sm mt-1">{errors.address}</span>
-                )}
               </div>
-
-            </div>
+            </section>
           </div>
         </div>
       </div>
@@ -973,3 +338,56 @@ export default function CitizenProfile({
   );
 }
 
+/* UI HELPERS */
+
+const Input = ({ label, value, icon, disabled, type = "text", onChange, onBlur, error, hint }) => (
+  <div className="group">
+    <label className="block text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.2em] mb-2 group-focus-within:text-white transition-colors">{label}</label>
+    <div className="relative">
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37]/50 group-focus-within:text-[#D4AF37] transition-colors">{icon}</div>
+      <input
+        type={type}
+        value={value || ""}
+        disabled={disabled}
+        onChange={e => onChange && onChange(e.target.value)}
+        onBlur={onBlur}
+        className={`w-full bg-gray-50 dark:bg-[#111] border ${error ? 'border-red-500' : 'border-gray-200 dark:border-[#333]'} rounded-xl pl-12 pr-4 py-3.5 text-gray-900 dark:text-white text-sm font-medium focus:border-[#D4AF37] outline-none transition-all disabled:opacity-50 disabled:grayscale transition-colors`}
+      />
+    </div>
+    {error ? <p className="mt-2 text-[9px] font-bold text-red-500 uppercase tracking-widest">{error}</p> : hint ? <p className="mt-2 text-[9px] font-bold text-gray-600 uppercase tracking-widest">{hint}</p> : null}
+  </div>
+);
+
+const Select = ({ label, value, options, icon, disabled, onChange }) => (
+  <div className="group">
+    <label className="block text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.2em] mb-2 group-focus-within:text-white transition-colors">{label}</label>
+    <div className="relative">
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37]/50 group-focus-within:text-[#D4AF37] transition-colors">{icon}</div>
+      <select
+        value={value || ""}
+        disabled={disabled}
+        onChange={e => onChange && onChange(e.target.value)}
+        className="w-full bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-[#333] rounded-xl pl-12 pr-4 py-3.5 text-gray-900 dark:text-white text-sm font-medium focus:border-[#D4AF37] outline-none transition-all appearance-none disabled:opacity-50 disabled:grayscale transition-colors"
+      >
+        <option value="">Select Option</option>
+        {options.map(o => <option key={o.value} value={o.value} className="bg-white dark:bg-[#1a1a1a]">{o.label}</option>)}
+      </select>
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#D4AF37]/30">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+      </div>
+    </div>
+  </div>
+);
+
+const Textarea = ({ label, value, disabled, onChange, rows }) => (
+  <div className="group">
+    <label className="block text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.2em] mb-2 group-focus-within:text-white transition-colors">{label}</label>
+    <textarea
+      value={value || ""}
+      disabled={disabled}
+      onChange={e => onChange && onChange(e.target.value)}
+      rows={rows}
+      className="w-full bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-[#333] rounded-xl px-4 py-4 text-gray-900 dark:text-white text-sm font-medium focus:border-[#D4AF37] outline-none transition-all resize-none disabled:opacity-50 disabled:grayscale transition-colors"
+    />
+  </div>
+);

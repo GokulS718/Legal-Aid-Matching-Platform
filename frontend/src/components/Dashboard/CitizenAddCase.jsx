@@ -10,6 +10,12 @@ import {
   setStep as setStepAction,
   setSaveStatus
 } from "../../Redux/caseSlice";
+import { FiFileText, FiCheck, FiX, FiCalendar } from "react-icons/fi";
+import {
+  INDIAN_STATES_AND_UT_ARRAY,
+  STATES_OBJECT,
+  STATE_WISE_CITIES,
+} from "indian-states-cities-list";
 
 /* ---------------- STEPS ---------------- */
 
@@ -32,7 +38,72 @@ export default function CaseFilingForm() {
   const { caseId, step, form, isLoading: loading, saveStatus, error } = useSelector((state) => state.case);
 
   const [victimNameError, setVictimNameError] = useState("");
+  const [selectedState, setSelectedState] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
   const handle = (k, v) => dispatch(updateForm({ [k]: v }));
+
+  const stateOptions = INDIAN_STATES_AND_UT_ARRAY;
+
+  const selectedStateObj = React.useMemo(() => {
+    return STATES_OBJECT.find((s) => s.value === selectedState);
+  }, [selectedState]);
+
+  const districtOptions = React.useMemo(() => {
+    if (!selectedState || !selectedStateObj) return [];
+    const stateKey = selectedStateObj.name;
+    const districts = STATE_WISE_CITIES[stateKey];
+    if (!districts) return [];
+    const dists = new Set();
+    if (Array.isArray(districts)) {
+      districts.forEach(d => {
+        if (d.district) dists.add(d.district);
+        else if (d.value) dists.add(d.value);
+      });
+    }
+    return Array.from(dists).sort();
+  }, [selectedState, selectedStateObj]);
+
+  const cityOptions = React.useMemo(() => {
+    if (!selectedState || !selectedStateObj || !selectedDistrict) return [];
+    const stateKey = selectedStateObj.name;
+    const cities = STATE_WISE_CITIES[stateKey];
+    if (!cities) return [];
+
+    // Filter cities by selected district
+    return cities
+      .filter(c => c.district === selectedDistrict)
+      .map(c => c.name || c.value)
+      .sort();
+  }, [selectedState, selectedStateObj, selectedDistrict]);
+
+  // Update incidentPlace whenever state, district or city changes
+  useEffect(() => {
+    if (selectedState && selectedDistrict && selectedCity) {
+      handle("incidentPlace", `${selectedCity}, ${selectedDistrict}, ${selectedState}`);
+    } else if (selectedState && selectedDistrict) {
+      handle("incidentPlace", `${selectedDistrict}, ${selectedState}`);
+    } else if (selectedState) {
+      handle("incidentPlace", selectedState);
+    }
+  }, [selectedState, selectedDistrict, selectedCity]);
+
+  // Initialize state/district/city from form if available
+  useEffect(() => {
+    if (form.incidentPlace && !selectedState) {
+      const parts = form.incidentPlace.split(", ");
+      if (parts.length === 3) {
+        setSelectedCity(parts[0]);
+        setSelectedDistrict(parts[1]);
+        setSelectedState(parts[2]);
+      } else if (parts.length === 2) {
+        setSelectedDistrict(parts[0]);
+        setSelectedState(parts[1]);
+      } else if (parts.length === 1) {
+        setSelectedState(parts[0]);
+      }
+    }
+  }, [form.incidentPlace]);
 
   // Load draft case on mount
   useEffect(() => {
@@ -162,6 +233,7 @@ export default function CaseFilingForm() {
     }
 
     const stepData = getStepData(step);
+    console.log("DEBUG: saving step", step, "data:", stepData, "caseId:", caseId);
     const result = await dispatch(saveStepData({ step, stepData, caseId }));
 
     if (saveStepData.fulfilled.match(result)) {
@@ -184,6 +256,11 @@ export default function CaseFilingForm() {
         toast.warn("Some files failed to upload: " + result.payload.uploadErrors.join(", "));
       }
       toast.success("Case submitted successfully!");
+      // Dispatch event to trigger cases refetch and navigate to My Cases
+      window.dispatchEvent(new CustomEvent('caseSubmitted'));
+      window.dispatchEvent(new CustomEvent('navigateDashboard', { detail: { page: 'cases' } }));
+    } else if (submitCaseData.rejected.match(result)) {
+      toast.error(result.payload || "Failed to submit case. Please try again.");
     }
   };
 
@@ -192,99 +269,114 @@ export default function CaseFilingForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f3f6f5] p-4 sm:p-10">
+    <div className="min-h-screen bg-transparent dark:bg-[#0a0a0a] p-4 sm:p-10 font-sans transition-colors duration-300">
       {/* HEADER */}
-      <div className="bg-[#2f4f4f] rounded-2xl p-6 sm:p-10 mb-10">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2">Add Your Case</h1>
-            <p className="text-gray-200 text-base sm:text-lg max-w-3xl">
-              Share accurate details so we can connect you with the right lawyer
-              based on urgency, location, and legal requirement.
-            </p>
-          </div>
-
+      <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-2xl p-8 sm:p-12 mb-10 relative overflow-hidden group transition-colors">
+        <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none group-hover:opacity-10 transition-all">
+          <h2 className="text-9xl font-serif text-[#D4AF37] italic select-none">Justice</h2>
+        </div>
+        <div className="relative z-10">
+          <span className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-[0.3em] mb-4 block">Case Registration Portal</span>
+          <h1 className="text-3xl sm:text-5xl font-bold text-gray-900 dark:text-white font-serif mb-4 tracking-tight transition-colors">Add Your Case</h1>
+          <p className="text-gray-600 dark:text-gray-400 text-base sm:text-lg max-w-3xl leading-relaxed transition-colors">
+            Share precise documentation to enable high-priority legal matching.
+            Our professionals review cases based on complexity, location, and urgency.
+          </p>
         </div>
         {saveStatus && (
-          <p className="mt-4 text-white text-sm">{saveStatus}</p>
+          <div className="mt-6 inline-flex items-center gap-2 px-3 py-1 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse"></span>
+            <p className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest">{saveStatus}</p>
+          </div>
         )}
+        <div className="mt-8 flex items-center gap-4">
+          <button
+            onClick={handleStartNewCase}
+            className="px-6 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/20 transition-all flex items-center gap-2 group/btn"
+          >
+            <FiFileText className="w-3 h-3 text-[#D4AF37] group-hover/btn:scale-110 transition-transform" /> Start New Case Record
+          </button>
+        </div>
       </div>
 
       {/* STEPPER */}
-      <div className="flex flex-wrap justify-center gap-4 mb-10 max-w-6xl mx-auto md:flex-nowrap md:justify-between md:gap-0">
+      <div className="flex flex-wrap justify-between gap-4 mb-12 max-w-6xl mx-auto px-4 overflow-x-auto pb-4 custom-scrollbar">
         {STEPS.map((s, i) => (
-          <div key={i} className="text-center w-16 md:w-auto md:flex-1">
+          <div key={i} className="flex flex-col items-center min-w-[80px] flex-1">
             <div
-              className={`mx-auto w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center border-2 font-semibold text-sm md:text-base ${i <= step
-                  ? "bg-[#234f4a] border-[#234f4a] text-white"
-                  : "border-gray-300 text-gray-400"
+              className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-500 font-bold text-sm ${i <= step
+                ? "bg-[#D4AF37] border-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.3)]"
+                : "border-gray-200 dark:border-[#333] text-gray-300 dark:text-gray-600 bg-transparent transition-colors"
                 }`}
             >
               {i + 1}
             </div>
-            <p className="mt-2 text-xs md:text-sm">{s}</p>
+            <p className={`mt-3 text-[10px] font-bold uppercase tracking-widest text-center transition-colors ${i <= step ? "text-[#D4AF37]" : "text-gray-400 dark:text-gray-600"}`}>{s}</p>
+            {i < STEPS.length - 1 && (
+              <div className={`h-[1px] w-full hidden md:block absolute top-5 -right-1/2 transition-colors ${i < step ? "bg-[#D4AF37]" : "bg-gray-200 dark:bg-[#333]"}`}></div>
+            )}
           </div>
         ))}
       </div>
 
       {/* FORM CARD */}
-      <div className="bg-white max-w-6xl mx-auto rounded-xl shadow-xl p-6 sm:p-10">
+      <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] max-w-6xl mx-auto rounded-2xl shadow-2xl p-6 sm:p-12 relative transition-colors">
+        <div className="absolute top-0 left-0 w-2 h-full bg-[#D4AF37]"></div>
+
         {/* STEP 1 */}
         {step === 0 && (
-          <Section title="Applicant Details">
-            {/* INSTRUCTION */}
-            <div className="md:col-span-2">
-              <p className="mb-6 text-sm text-gray-600 italic">
-                Please enter your personal details exactly as per official
-                records. These details are used for lawyer verification and case
-                communication.
-              </p>
+          <Section title="Applicant Credentials">
+            <div className="md:col-span-2 mb-6">
+              <div className="bg-gray-50 dark:bg-[#252525] border border-gray-100 dark:border-[#333] p-4 rounded-xl flex items-start gap-4 transition-colors">
+                <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] shrink-0">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed italic transition-colors">
+                  Authentication protocol: Enter personal identification exactly as listed on official government documentation for successful verification.
+                </p>
+              </div>
             </div>
 
-            {/* FULL NAME */}
             <Input
               label="Full Name"
               required
               maxLength={50}
               value={form.applicantName}
-              placeholder="Example: Rahul Sharma"
-              hint="According to PAN or AADHAR proof (Only alphabets and spaces are allowed.)"
+              placeholder="As per Identity Proof"
+              hint="Only alphabetical characters are permissible"
               onChange={(v) =>
                 handle("applicantName", v.replace(/[^A-Za-z ]/g, ""))
               }
             />
 
-            {/* EMAIL */}
             <Input
-              label="Email Address"
+              label="Digital Address"
               type="email"
               required
               value={form.email}
-              placeholder="Example: rahul.sharma@gmail.com"
-              hint="Case updates and lawyer communication will be sent to this email."
+              placeholder="verified.email@domain.com"
+              hint="Primary channel for high-priority correspondence"
               onChange={(v) => handle("email", v)}
             />
 
-            {/* MOBILE */}
             <Input
-              label="Mobile Number"
+              label="Contact Number"
               type="tel"
               required
               maxLength={10}
               value={form.mobile}
-              placeholder="Example: 9876543210"
-              hint="Enter a valid 10-digit mobile number without country code."
+              placeholder="Primary Mobile Number"
+              hint="10-digit Indian standard (exclude +91)"
               onChange={(v) => handle("mobile", v)}
             />
 
-            {/* AADHAAR */}
             <Input
-              label="Aadhaar Number"
+              label="Aadhaar ID"
               type="text"
               required
               value={form.aadhaar}
-              placeholder="Example: 123412341234"
-              hint="Enter your 12-digit Aadhaar number (numbers only)."
+              placeholder="12-digit Unique Identification"
+              hint="Encrypted for secure verification"
               maxLength={12}
               pattern="\d{12}"
               onChange={(v) =>
@@ -296,27 +388,24 @@ export default function CaseFilingForm() {
 
         {/* STEP 2 */}
         {step === 1 && (
-          <Section title="Victim Details">
-            {/* INSTRUCTION */}
-            <div className="md:col-span-2">
-              <p className="mb-4 text-sm text-gray-600 italic">
-                Enter the details of the person directly affected by the case.
-                These details are important for legal assessment.
+          <Section title="Subject/Victim Data">
+            <div className="md:col-span-2 mb-6">
+              <p className="text-gray-400 dark:text-gray-500 text-sm font-medium italic border-l-2 border-[#D4AF37]/30 pl-4 transition-colors">
+                Provide details of the individual requiring immediate legal intervention.
               </p>
             </div>
 
-            {/* VICTIM NAME */}
             <Input
-              label="Victim Name"
+              label="Subject Name"
               required
               value={form.victimName}
-              placeholder="Example: Anjali Sharma"
-              hint={victimNameError || "Only alphabets and spaces are allowed."}
+              placeholder="Full Name"
+              hint={victimNameError || "Alphabetical characters only"}
               error={!!victimNameError}
               onChange={(v) => {
                 if (/[^A-Za-z ]/.test(v)) {
                   setVictimNameError(
-                    "Victim name should contain only letters and spaces."
+                    "Standard alphabet protocol required."
                   );
                 } else {
                   setVictimNameError("");
@@ -325,50 +414,33 @@ export default function CaseFilingForm() {
               }}
             />
 
-            {/* RELATION */}
             <Select
-              label="Relation with Applicant"
+              label="Legal Relationship"
               required
               value={form.relation}
-              hint="Select how the applicant is related to the victim."
+              hint="Relationship of petitioner to the subject"
               options={[
-                "Self",
-                "Father",
-                "Mother",
-                "Son",
-                "Daughter",
-                "Husband",
-                "Wife",
-                "Brother",
-                "Sister",
-                "Grandfather",
-                "Grandmother",
-                "Legal Guardian",
-                "Relative",
-                "Friend",
-                "Other",
+                "Self", "Father", "Mother", "Son", "Daughter", "Husband", "Wife", "Brother", "Sister", "Grandfather", "Grandmother", "Legal Guardian", "Relative", "Friend", "Other",
               ]}
               onChange={(v) => handle("relation", v)}
             />
 
-            {/* GENDER */}
             <Select
-              label="Gender"
+              label="Biological Gender"
               required
               value={form.victimGender}
-              hint="Select the gender of the victim."
+              hint="Official gender classification"
               options={["Male", "Female", "Other"]}
               onChange={(v) => handle("victimGender", v)}
             />
 
-            {/* AGE */}
             <Input
-              label="Age"
+              label="Certified Age"
               type="number"
               required
               value={form.victimAge}
-              placeholder="Example: 35"
-              hint="Enter age between 1 and 100 years."
+              placeholder="Age in years"
+              hint="Subject must be between 1-100"
               minLength={1}
               maxLength={3}
               onChange={(v) => handle("victimAge", v)}
@@ -378,15 +450,16 @@ export default function CaseFilingForm() {
 
         {/* STEP 3 */}
         {step === 2 && (
-          <Section title="Case Details">
+          <Section title="Primary Case Metadata">
             <Input
-              label="Case Title"
+              label="Case Designation"
               required
               value={form.caseTitle}
+              placeholder="Short title for your matter"
               onChange={(v) => handle("caseTitle", v)}
             />
             <Select
-              label="Case Type"
+              label="Jurisdiction Type"
               required
               value={form.caseType}
               options={["Civil", "Criminal", "Family", "Property", "Consumer"]}
@@ -397,22 +470,58 @@ export default function CaseFilingForm() {
 
         {/* STEP 4 */}
         {step === 3 && (
-          <Section title="Incident Details">
+          <Section title="Temporal & Spatial Data">
             <Input
-              label="Incident Date"
+              label="Date of Incident"
               type="date"
               required
               value={form.incidentDate}
               onChange={(v) => handle("incidentDate", v)}
-            />
-            <Input
-              label="Incident Place (City/District)"
-              required
-              value={form.incidentPlace}
-              onChange={(v) => handle("incidentPlace", v)}
+              style={{ colorScheme: "dark" }}
+              onClick={(e) => e.target.showPicker && e.target.showPicker()}
             />
             <Select
-              label="Urgency Level"
+              label="State of Incident"
+              required
+              value={selectedState}
+              options={stateOptions}
+              onChange={(v) => {
+                setSelectedState(v);
+                setSelectedDistrict("");
+                setSelectedCity("");
+              }}
+            />
+            <Select
+              label="District of Incident"
+              required
+              value={selectedDistrict}
+              options={districtOptions}
+              disabled={!selectedState}
+              onChange={(v) => {
+                setSelectedDistrict(v);
+                setSelectedCity("");
+              }}
+            />
+            {cityOptions.length > 0 ? (
+              <Select
+                label="City of Incident"
+                required
+                value={selectedCity}
+                options={cityOptions}
+                disabled={!selectedDistrict}
+                onChange={(v) => setSelectedCity(v)}
+              />
+            ) : (
+              <Input
+                label="City of Incident"
+                required
+                value={selectedCity}
+                placeholder="Enter City / Town"
+                onChange={(v) => setSelectedCity(v)}
+              />
+            )}
+            <Select
+              label="Urgency Protocol"
               required
               value={form.urgency}
               options={["Low", "Medium", "High"]}
@@ -423,40 +532,37 @@ export default function CaseFilingForm() {
 
         {/* STEP 5 */}
         {step === 4 && (
-          <Section title="Legal Preference">
+          <Section title="Professional Requirement">
             <Select
-              label="Lawyer Specialization"
+              label="Required Specialization"
               required
               value={form.specialization}
               options={["Criminal", "Civil", "Family", "Property"]}
               onChange={(v) => handle("specialization", v)}
             />
             <Select
-              label="Court Type"
+              label="Target Judicial Tiers"
               required
               value={form.courtType}
               options={["District Court", "High Court", "Supreme Court"]}
               onChange={(v) => handle("courtType", v)}
             />
             <Select
-              label="Seeking Help from NGO?"
+              label="Social Support (NGO)"
               required
               value={form.seekingNgoHelp}
+              hint="Enable multidisciplinary support"
               options={["Yes", "No"]}
               onChange={(v) => handle("seekingNgoHelp", v)}
             />
 
             {form.seekingNgoHelp === "Yes" && (
               <Select
-                label="Type of NGO"
+                label="Organization Pillar"
                 required
                 value={form.ngoType}
                 options={[
-                  "Legal Aid",
-                  "Women Rights",
-                  "Child Protection",
-                  "Senior Citizen Welfare",
-                  "Human Rights",
+                  "Legal Aid", "Women Rights", "Child Protection", "Senior Citizen Welfare", "Human Rights", "Education Support", "Child Rights", "Women Welfare", "Community Welfare", "Disaster Relief",
                 ]}
                 onChange={(v) => handle("ngoType", v)}
               />
@@ -466,43 +572,29 @@ export default function CaseFilingForm() {
 
         {/* STEP 6 */}
         {step === 5 && (
-          <Section title="Case Explanation">
-            {/* INSTRUCTION */}
-            <p className="mb-4 text-sm text-gray-600 italic">
-              Please explain your case clearly and briefly. This information
-              helps the lawyer understand your situation without an initial
-              phone call.
+          <Section title="Case Narrative">
+            <p className="md:col-span-2 mb-8 text-sm text-gray-400 dark:text-gray-500 leading-relaxed font-serif italic transition-colors">
+              "Precision in narrative accelerates the intake process. Outline key events chronologically to assist our legal reviewers."
             </p>
 
-            {/* CASE BACKGROUND */}
             <div className="md:col-span-2">
-              <p className="mb-2 text-sm text-[#234f4a] italic">
-                <strong>Example:</strong> I purchased a flat in 2021, but the
-                builder has failed to hand over possession despite multiple
-                notices.
-              </p>
               <Textarea
-                label="Case Background"
+                label="Historical Background"
                 required
-                rows={3}
+                rows={4}
                 value={form.background}
-                placeholder="Describe what happened, when it happened, and who is involved..."
+                placeholder="Detailed chronological sequence of events..."
                 onChange={(v) => handle("background", v)}
               />
             </div>
 
-            {/* RELIEF EXPECTED */}
-            <div className="md:col-span-2">
-              <p className="mb-2 text-sm text-[#234f4a] italic">
-                <strong>Example:</strong> I am seeking compensation and
-                immediate possession of the property.
-              </p>
+            <div className="md:col-span-2 mt-4">
               <Textarea
-                label="Relief Expected"
+                label="Desired Outcome (Relief)"
                 required
-                rows={2}
+                rows={3}
                 value={form.relief}
-                placeholder="Mention the outcome you expect (compensation, stay order, bail, etc.)"
+                placeholder="Specific relief sought (e.g., Mandatory Injunction, Pecuniary Damages, Bail)..."
                 onChange={(v) => handle("relief", v)}
               />
             </div>
@@ -511,111 +603,141 @@ export default function CaseFilingForm() {
 
         {/* STEP 7 */}
         {step === 6 && (
-          <Section title="Documents & Confirmation">
-            <div className="md:col-span-2">
-              <p className="mb-2 italic text-[#234f4a]">
-                FIR Copy • Notices / Summons • Agreements / Contracts • Medical
-                Reports • Court Orders (If any) - PDF format only
-              </p>
-              <p className="mb-4 text-sm text-gray-500">
-                Max file size: <strong>2MB</strong> per file. Allowed: PDF only
-              </p>
+          <Section title="Evidence & Affirmation">
+            <div className="md:col-span-2 bg-gray-50 dark:bg-[#111] border border-gray-100 dark:border-[#333] p-8 rounded-2xl mb-8 transition-colors">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500 dark:text-blue-400 transition-colors">
+                  <FiFileText size={24} />
+                </div>
+                <div>
+                  <h4 className="text-gray-900 dark:text-white font-bold text-sm tracking-tight uppercase tracking-widest transition-colors">Document Depository</h4>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-500 font-bold uppercase tracking-widest transition-colors">Digital Evidence Standards</p>
+                </div>
+              </div>
 
-              <input
-                type="file"
-                multiple
-                accept=".pdf,application/pdf"
-                className="w-full border border-dashed p-6 rounded-lg mb-2"
-                onChange={(e) => {
-                  const files = [...e.target.files];
-                  const maxSize = 2 * 1024 * 1024; // 2MB
-                  const validFiles = [];
-                  const errors = [];
+              <ul className="text-[11px] font-bold text-gray-400 dark:text-gray-500 grid grid-cols-2 gap-x-8 gap-y-2 mb-8 uppercase tracking-widest list-disc pl-5 transition-colors">
+                <li>FIR DOCUMENTATION</li>
+                <li>LEGAL NOTICES</li>
+                <li>STATUTORY SUMMONS</li>
+                <li>CONTRACTUAL AGREEMENTS</li>
+                <li>MEDICAL EVIDENCE</li>
+                <li>JUDICIAL ORDERS</li>
+              </ul>
 
-                  files.forEach(file => {
-                    if (file.type !== "application/pdf") {
-                      errors.push(`${file.name}: Only PDF files are allowed`);
-                    } else if (file.size > maxSize) {
-                      errors.push(`${file.name}: exceeds 2MB limit`);
-                    } else if (form.documents.some(d => d.name === file.name && d.size === file.size)) {
-                      errors.push(`${file.name}: already added`);
-                    } else {
-                      validFiles.push(file);
+              <div className="relative group">
+                <input
+                  type="file"
+                  id="file-upload"
+                  multiple
+                  accept=".pdf,application/pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = [...e.target.files];
+                    const maxSize = 2 * 1024 * 1024; // 2MB
+                    const validFiles = [];
+                    const errors = [];
+
+                    files.forEach(file => {
+                      if (file.type !== "application/pdf") {
+                        errors.push(`${file.name}: Protocol requires PDF`);
+                      } else if (file.size > maxSize) {
+                        errors.push(`${file.name}: Exceeds 2MB threshold`);
+                      } else if (form.documents.some(d => d.name === file.name && d.size === file.size)) {
+                        errors.push(`${file.name}: Redundant entry`);
+                      } else {
+                        validFiles.push(file);
+                      }
+                    });
+
+                    if (errors.length > 0) {
+                      toast.error(errors[0]);
                     }
-                  });
 
-                  if (errors.length > 0) {
-                    toast.error("Some files were skipped: " + errors.join(", "));
-                  }
-
-                  if (validFiles.length > 0) {
-                    handle("documents", [...form.documents, ...validFiles]);
-                  }
-
-                  // Reset input value to allow selecting the same file again if needed after removal
-                  e.target.value = '';
-                }}
-              />
+                    if (validFiles.length > 0) {
+                      handle("documents", [...form.documents, ...validFiles]);
+                    }
+                    e.target.value = '';
+                  }}
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="flex flex-col items-center justify-center p-10 border-2 border-dashed border-gray-200 dark:border-[#333] rounded-2xl cursor-pointer hover:border-[#D4AF37] hover:bg-[#D4AF37]/5 transition-all group-active:scale-95 transition-colors"
+                >
+                  <svg className="w-10 h-10 text-gray-300 dark:text-gray-700 group-hover:text-[#D4AF37] transition-colors mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                  <p className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest mb-1 transition-colors">Upload Dossier Items</p>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-600 font-bold uppercase tracking-[0.2em] transition-colors">MAX 2.0MB • PDF STANDARD ONLY</p>
+                </label>
+              </div>
 
               {form.documents.length > 0 && (
-                <div className="mb-4 text-sm text-gray-600">
-                  <p className="font-medium mb-2">Selected files:</p>
-                  <ul className="space-y-2">
-                    {form.documents.map((file, idx) => (
-                      <li key={idx} className="flex items-center justify-between bg-gray-50 p-2 rounded border">
-                        <span className="truncate max-w-[80%]">{file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                        <button
-                          onClick={() => {
-                            const newDocs = form.documents.filter((_, i) => i !== idx);
-                            handle("documents", newDocs);
-                          }}
-                          className="text-red-500 hover:text-red-700 font-medium text-xs px-2 py-1 rounded border border-red-200 hover:bg-red-50"
-                        >
-                          Remove
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="mt-8 space-y-3">
+                  <p className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-widest mb-4">Ingested Assets:</p>
+                  {form.documents.map((file, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-white dark:bg-[#1a1a1a] p-4 rounded-xl border border-gray-100 dark:border-[#333] group hover:border-[#D4AF37]/50 transition-all transition-colors">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <FiFileText className="text-[#D4AF37] shrink-0" />
+                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate lowercase tracking-wider transition-colors">{file.name}</span>
+                        <span className="text-[9px] font-bold text-gray-400 dark:text-gray-600 uppercase transition-colors">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const newDocs = form.documents.filter((_, i) => i !== idx);
+                          handle("documents", newDocs);
+                        }}
+                        className="text-gray-600 hover:text-red-500 transition-colors p-2"
+                      >
+                        <FiX size={16} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
 
-            <div className="md:col-span-2">
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  required
-                  checked={form.confirm}
-                  onChange={(e) => handle("confirm", e.target.checked)}
-                />
-                I confirm the above information is correct.
+            <div className="md:col-span-2 pt-4">
+              <label className="flex items-center gap-4 cursor-pointer group">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    required
+                    className="sr-only peer"
+                    checked={form.confirm}
+                    onChange={(e) => handle("confirm", e.target.checked)}
+                  />
+                  <div className="w-5 h-5 border-2 border-gray-200 dark:border-[#333] rounded group-hover:border-[#D4AF37] transition-all peer-checked:bg-[#D4AF37] peer-checked:border-[#D4AF37]"></div>
+                  <FiCheck size={12} className="absolute inset-0 m-auto text-black opacity-0 peer-checked:opacity-100 transition-opacity" />
+                </div>
+                <span className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest leading-none transition-colors">I solemnly affirm the veracity of the information provided herein.</span>
               </label>
             </div>
           </Section>
         )}
 
         {/* ACTIONS */}
-        <div className="flex flex-col-reverse gap-3 mt-10 sm:flex-row sm:justify-between sm:gap-0">
+        <div className="flex flex-col-reverse gap-4 mt-12 sm:flex-row sm:justify-between items-center bg-gray-50 dark:bg-[#111] p-6 rounded-2xl border border-gray-100 dark:border-[#333] transition-colors">
           {step > 0 && (
-            <button onClick={back} className="w-full sm:w-auto px-6 sm:px-8 py-3 border rounded-lg">
-              ← Back
+            <button
+              onClick={back}
+              className="w-full sm:w-auto px-8 py-3.5 border border-gray-200 dark:border-[#333] rounded-xl text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 transition-all text-center transition-colors"
+            >
+              ← Previous Phase
             </button>
           )}
           {step < STEPS.length - 1 ? (
             <button
               onClick={next}
               disabled={loading}
-              className="w-full sm:w-auto px-6 sm:px-10 py-3 bg-[#234f4a] text-white rounded-lg sm:ml-auto disabled:opacity-50"
+              className="w-full sm:w-auto px-10 py-3.5 bg-[#D4AF37] text-black rounded-xl text-xs font-bold uppercase tracking-widest sm:ml-auto disabled:opacity-30 disabled:grayscale transition-all hover:bg-[#c5a059] shadow-xl shadow-[#D4AF37]/10 text-center"
             >
-              {loading ? "Saving..." : "Save & Continue →"}
+              {loading ? "Encrypting..." : "Commit & Proceed →"}
             </button>
           ) : (
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full sm:w-auto px-6 sm:px-10 py-3 bg-green-700 text-white rounded-lg sm:ml-auto disabled:opacity-50"
+              className="w-full sm:w-auto px-10 py-3.5 bg-[#D4AF37] text-black rounded-xl text-xs font-bold uppercase tracking-widest sm:ml-auto disabled:opacity-30 disabled:grayscale transition-all hover:bg-[#c5a059] shadow-xl shadow-[#D4AF37]/10 text-center"
             >
-              {loading ? "Submitting..." : "Submit Case"}
+              {loading ? "Transmitting..." : "Execute Case Submission"}
             </button>
           )}
         </div>
@@ -627,9 +749,9 @@ export default function CaseFilingForm() {
 /* ---------------- UI COMPONENTS ---------------- */
 
 const Section = ({ title, children }) => (
-  <div>
-    <h2 className="text-2xl font-semibold mb-6">{title}</h2>
-    <div className="grid md:grid-cols-2 gap-6">{children}</div>
+  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <h2 className="text-2xl font-bold font-serif text-gray-900 dark:text-white mb-8 tracking-tight transition-colors">{title}</h2>
+    <div className="grid md:grid-cols-2 gap-x-12 gap-y-8">{children}</div>
   </div>
 );
 
@@ -643,60 +765,75 @@ const Input = ({
   maxLength,
   pattern,
   value = "",
+  ...props
 }) => (
-  <div>
-    <label className="block mb-1 font-medium">
-      {label} {required && <span className="text-red-500">*</span>}
+  <div className="group">
+    <label className="block text-[10px] font-bold text-[#D4AF37] uppercase tracking-[0.2em] mb-2 group-focus-within:text-white transition-colors">
+      {label} {required && <span className="opacity-50 text-red-500">*</span>}
     </label>
 
-    <input
-      type={type}
-      required={required}
-      placeholder={placeholder}
-      maxLength={maxLength}
-      pattern={pattern}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#7fb3a2]"
-    />
+    <div className="relative">
+      <input
+        {...props}
+        type={type}
+        required={required}
+        placeholder={placeholder}
+        maxLength={maxLength}
+        pattern={pattern}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-[#333] rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-700 focus:border-[#D4AF37] outline-none text-sm transition-all focus:shadow-[0_0_15px_rgba(212,175,55,0.05)] ${type === "date" ? "pr-10" : ""}`}
+      />
+      {type === "date" && (
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#D4AF37]/50 group-focus-within:text-[#D4AF37]">
+          <FiCalendar size={18} />
+        </div>
+      )}
+    </div>
 
-    {hint && <p className="mt-1 text-sm italic text-gray-500">{hint}</p>}
+    {hint && <p className="mt-2 text-[9px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-600 group-focus-within:text-gray-600 dark:group-focus-within:text-gray-400 transition-colors italic">{hint}</p>}
   </div>
 );
 
-const Select = ({ label, options, required, onChange, value = "", hint }) => (
-  <div>
-    <label className="block mb-1 font-medium">
-      {label} {required && <span className="text-red-500">*</span>}
+const Select = ({ label, options, required, onChange, value = "", hint, disabled }) => (
+  <div className="group">
+    <label className="block text-[10px] font-bold text-[#D4AF37] uppercase tracking-[0.2em] mb-2 group-focus-within:text-white transition-colors">
+      {label} {required && <span className="opacity-50 text-red-500">*</span>}
     </label>
-    <select
-      required={required}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full p-3 border rounded-lg"
-    >
-      <option value="">Select</option>
-      {options.map((o) => (
-        <option key={o} value={o}>{o}</option>
-      ))}
-    </select>
-    {hint && <p className="mt-1 text-sm italic text-gray-500">{hint}</p>}
+    <div className="relative">
+      <select
+        required={required}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-[#333] rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-[#D4AF37] outline-none text-sm cursor-pointer appearance-none transition-all transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <option value="" className="bg-white dark:bg-[#1a1a1a]">Select Configuration</option>
+        {options.map((o) => (
+          <option key={o} value={o} className="bg-white dark:bg-[#1a1a1a]">{o}</option>
+        ))}
+      </select>
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#D4AF37]/50 group-focus-within:text-[#D4AF37]">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+      </div>
+    </div>
+    {hint && <p className="mt-2 text-[9px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-600 group-focus-within:text-gray-600 dark:group-focus-within:text-gray-400 transition-colors italic">{hint}</p>}
   </div>
 );
 
 const Textarea = ({ label, required, onChange, rows = 3, placeholder, value = "" }) => (
-  <div className="md:col-span-2">
-    <label className="block mb-1 font-medium">
-      {label} {required && <span className="text-red-500">*</span>}
+  <div className="group">
+    <label className="block text-[10px] font-bold text-[#D4AF37] uppercase tracking-[0.2em] mb-2 group-focus-within:text-white transition-colors">
+      {label} {required && <span className="opacity-50 text-red-500">*</span>}
     </label>
 
     <textarea
-      rows={rows}
       required={required}
+      rows={rows}
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#7fb3a2]"
+      className="w-full bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-[#333] rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-700 focus:border-[#D4AF37] outline-none text-sm transition-all focus:shadow-[0_0_15px_rgba(212,175,55,0.05)] resize-none"
     />
   </div>
 );

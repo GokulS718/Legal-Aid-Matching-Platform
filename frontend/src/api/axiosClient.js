@@ -13,6 +13,10 @@ axiosClient.interceptors.request.use((config) => {
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+    // Preserve _silent flag for response interceptor
+    if (config._silent !== undefined) {
+        config._silent = config._silent;
+    }
     return config;
 });
 
@@ -20,22 +24,22 @@ axiosClient.interceptors.response.use(
     (res) => res,
     async (err) => {
         const original = err.config;
-        
+
         // Don't redirect for login endpoint - let the login form handle the error
         const isLoginEndpoint = original.url && original.url.includes('/auth/login');
-        
+
         // Don't redirect for profile check requests (silent auth checks)
         const isProfileCheck = original.url && original.url.includes('/profile/me');
-        
+
         // Don't redirect if this is a silent request (e.g., checking auth status)
         const isSilentRequest = original._silent === true || isProfileCheck;
-        
+
         // Don't redirect if we're already on the login page
         const isOnLoginPage = window.location.pathname === '/login' || window.location.pathname === '/login/';
-        
+
         // Don't redirect if we're on the home page (public route)
         const isOnHomePage = window.location.pathname === '/' || window.location.pathname === '';
-        
+
         if (err.response && err.response.status === 401 && !original._retry && !isLoginEndpoint && !isOnLoginPage && !isSilentRequest && !isOnHomePage) {
             original._retry = true;
             try {
@@ -64,6 +68,17 @@ axiosClient.interceptors.response.use(
             }
         }
         // For login endpoint errors, silent requests, or if already on login/home page, just reject without redirecting
+        console.error("API Error:", {
+            url: original.url,
+            status: err.response?.status,
+            message: err.message,
+            data: err.response?.data
+        });
+
+        if (!err.response) {
+            console.error("Network Error detected. Possible causes: Backend down, CORS issue, or browser blocking request.");
+        }
+
         return Promise.reject(err);
     }
 );

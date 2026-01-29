@@ -30,10 +30,10 @@ const InputField = ({ label, id, type = "text", placeholder, value, onChange, on
         {...inputProps}
         disabled={disabled}
         className={`block w-full rounded-md border px-3 py-2.5 sm:text-sm focus:outline-none focus:ring-1 shadow-sm ${disabled
-            ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-300"
-            : showError
-              ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-              : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+          ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-300"
+          : showError
+            ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+            : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
           }`}
       />
       {showError && (
@@ -724,8 +724,8 @@ const NGOForm = () => {
               e.target.scrollIntoView({ behavior: "instant", block: "nearest" });
             }}
             className={`block w-full pl-3 pr-10 py-2.5 text-sm border-gray-300 focus:outline-none focus:ring-1 rounded-md shadow-sm border appearance-none ${disabled || isLoading
-                ? "bg-gray-100 cursor-not-allowed opacity-60"
-                : "cursor-pointer focus:ring-blue-500 focus:border-blue-500"
+              ? "bg-gray-100 cursor-not-allowed opacity-60"
+              : "cursor-pointer focus:ring-blue-500 focus:border-blue-500"
               }`}
           >
             <option value="">{`Select ${label.split(" ")[0]}`}</option>
@@ -755,8 +755,16 @@ const NGOForm = () => {
   };
 
   const ngoTypeOptions = [
-    { label: "Charitable", value: "CH" },
-    { label: "Educational", value: "ED" },
+    { label: "Legal Aid", value: "Legal Aid" },
+    { label: "Women Rights", value: "Women Rights" },
+    { label: "Child Protection", value: "Child Protection" },
+    { label: "Senior Citizen Welfare", value: "Senior Citizen Welfare" },
+    { label: "Human Rights", value: "Human Rights" },
+    { label: "Education Support", value: "Education Support" },
+    { label: "Child Rights", value: "Child Rights" },
+    { label: "Women Welfare", value: "Women Welfare" },
+    { label: "Community Welfare", value: "Community Welfare" },
+    { label: "Disaster Relief", value: "Disaster Relief" },
   ];
 
   return (
@@ -1030,10 +1038,10 @@ const NGOForm = () => {
                 onBlur={() => handleBlur("latitude")}
                 disabled={isLoading}
                 className={`block w-full rounded-md border px-3 py-2.5 sm:text-sm focus:outline-none focus:ring-1 shadow-sm ${isLoading
-                    ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-300"
-                    : touched.latitude && errors.latitude
-                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-300"
+                  : touched.latitude && errors.latitude
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   }`}
               />
               {touched.latitude && errors.latitude && (
@@ -1070,10 +1078,10 @@ const NGOForm = () => {
                 onBlur={() => handleBlur("longitude")}
                 disabled={isLoading}
                 className={`block w-full rounded-md border px-3 py-2.5 sm:text-sm focus:outline-none focus:ring-1 shadow-sm ${isLoading
-                    ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-300"
-                    : touched.longitude && errors.longitude
-                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  ? "bg-gray-100 cursor-not-allowed opacity-60 border-gray-300"
+                  : touched.longitude && errors.longitude
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   }`}
               />
               {touched.longitude && errors.longitude && (

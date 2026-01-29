@@ -4,364 +4,312 @@ import { useDispatch, useSelector } from "react-redux";
 import { logoutUser } from "../Redux/authSlice.js";
 import React from "react";
 import Navbar from "../pages/NavBar";
+import logo from "../assets/logo.png";
+import { FiArrowRight } from "react-icons/fi";
 
-// import logo from "../assets/LOGO.png";
-// import MapComponent from "./MapComponent";
 export default function Home({ user }) {
   const dispatch = useDispatch();
   const { isAuthenticated } = useSelector((state) => state.auth);
 
-  // Logout user if they navigate back to home page using browser back button
-  // Only logout if user is actually authenticated (has valid token and isAuthenticated is true)
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     const role = localStorage.getItem("role");
-
-    // Only logout if:
-    // 1. There's a token in localStorage
-    // 2. User is authenticated in Redux
-    // 3. User has a role (meaning they were actually logged in)
     if (token && isAuthenticated && role) {
-      // User is logged in but navigated to home page - logout them
       dispatch(logoutUser());
     }
   }, [dispatch, isAuthenticated]);
-  // 🌿 IMAGE SLIDER DATA
+
   const sliderImages = [
     {
-      image:
-        "https://st4.depositphotos.com/25985398/39496/i/450/depositphotos_394965726-stock-photo-professional-women-lawyers-work-law.jpg",
+      image: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=2072&auto=format&fit=crop",
       title: "Justice Should Never Be A Privilege",
-      message:
-        "Every voice matters. Every citizen deserves equal access to justice, support, and legal awareness.",
+      message: "Every voice matters. Every citizen deserves equal access to justice, support, and legal awareness.",
     },
     {
-      image:
-        "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1600&q=60",
+      image: "https://images.unsplash.com/photo-1505664194779-8beaceb93744?q=80&w=2070&auto=format&fit=crop",
       title: "Empowering Communities, One Case at a Time",
-      message:
-        "When citizens, lawyers and NGOs unite, justice becomes a reality — not a distant dream.",
+      message: "When citizens, lawyers and NGOs unite, justice becomes a reality — not a distant dream.",
     },
     {
-      image:
-        "https://previews.123rf.com/images/olivier26/olivier261810/olivier26181000018/111832907-legal-symbol-with-scales-of-justice-golden-sign-embossed-on-black-paper-background-3d-illustration.jpg",
+      image: "https://images.unsplash.com/photo-1479142506502-19b3a3b7ff33?q=80&w=2070&auto=format&fit=crop",
       title: "Your Rights Matter. Your Story Matters.",
-      message:
-        "No one should fight alone. Together, we stand for fairness, dignity, and human rights.",
-    },
-    {
-      image:
-        "https://www.esade.edu/wp-content/uploads/2024/07/abogado-asesorando-pareja.jpg",
-      title: "A Platform Built for Hope and Change",
-      message:
-        "Connecting citizens to legal support and social organizations who truly care.",
+      message: "No one should fight alone. Together, we stand for fairness, dignity, and human rights.",
     },
   ];
 
-  // 🌿 SLIDER STATE
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [typingText, setTypingText] = useState("");
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const [ecosystemTypingText, setEcosystemTypingText] = useState("");
+  const [ecosystemMessageIndex, setEcosystemMessageIndex] = useState(0);
+  const [ecosystemIsDeleting, setEcosystemIsDeleting] = useState(false);
 
-  // 🌿 AUTO SLIDER LOGIC
+  const typingMessages = [
+    "Justice Is Everyone's Right.",
+    "Legal Aid For Every Citizen.",
+    "Connecting Communities Through Law.",
+    "Empowering Voices, Ensuring Rights.",
+    "Building Bridges To Justice."
+  ];
+
+  const ecosystemMessages = [
+    "Our Ecosystem",
+    "Citizens, Lawyers & NGOs",
+    "United For Justice",
+    "A Network Of Support",
+    "Together We Stand"
+  ];
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % sliderImages.length);
-    }, 2000);
-
+    }, 4000);
     return () => clearInterval(interval);
   }, [sliderImages.length]);
 
-  // 🌿 UI STARTS HERE
+  useEffect(() => {
+    const currentMessage = typingMessages[currentMessageIndex];
+    let timeout;
+
+    if (!isDeleting && typingText.length < currentMessage.length) {
+      // Typing
+      timeout = setTimeout(() => {
+        setTypingText(currentMessage.substring(0, typingText.length + 1));
+      }, 100);
+    } else if (!isDeleting && typingText.length === currentMessage.length) {
+      // Pause after typing complete
+      timeout = setTimeout(() => {
+        setIsDeleting(true);
+      }, 2000);
+    } else if (isDeleting && typingText.length > 0) {
+      // Deleting
+      timeout = setTimeout(() => {
+        setTypingText(currentMessage.substring(0, typingText.length - 1));
+      }, 50);
+    } else if (isDeleting && typingText.length === 0) {
+      // Move to next message
+      setIsDeleting(false);
+      setCurrentMessageIndex((prev) => (prev + 1) % typingMessages.length);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [typingText, currentMessageIndex, isDeleting, typingMessages]);
+
+  useEffect(() => {
+    const currentMessage = ecosystemMessages[ecosystemMessageIndex];
+    let timeout;
+
+    if (!ecosystemIsDeleting && ecosystemTypingText.length < currentMessage.length) {
+      // Typing
+      timeout = setTimeout(() => {
+        setEcosystemTypingText(currentMessage.substring(0, ecosystemTypingText.length + 1));
+      }, 120);
+    } else if (!ecosystemIsDeleting && ecosystemTypingText.length === currentMessage.length) {
+      // Pause after typing complete
+      timeout = setTimeout(() => {
+        setEcosystemIsDeleting(true);
+      }, 2500);
+    } else if (ecosystemIsDeleting && ecosystemTypingText.length > 0) {
+      // Deleting
+      timeout = setTimeout(() => {
+        setEcosystemTypingText(currentMessage.substring(0, ecosystemTypingText.length - 1));
+      }, 60);
+    } else if (ecosystemIsDeleting && ecosystemTypingText.length === 0) {
+      // Move to next message
+      setEcosystemIsDeleting(false);
+      setEcosystemMessageIndex((prev) => (prev + 1) % ecosystemMessages.length);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [ecosystemTypingText, ecosystemMessageIndex, ecosystemIsDeleting, ecosystemMessages]);
+
   return (
-    <>
-      {/* <MapComponent></MapComponent> */}
-      <div className="w-full">
-        {/* 🌿 NAVBAR */}
-        <Navbar />
-        {/* 🌿 HERO SECTION WITH AUTO SLIDER */}
-        <section className="relative h-[85vh] w-full overflow-hidden">
-          {/* Background Image */}
-          <div
-            className="absolute inset-0 h-full w-full bg-cover bg-center transition-all duration-1000"
-            style={{
-              backgroundImage: `url(${sliderImages[currentSlide].image})`,
-            }}
-          ></div>
+    <div className="w-full bg-white dark:bg-[#111111] text-gray-900 dark:text-gray-200 font-sans selection:bg-[#D4AF37] selection:text-black transition-colors duration-300">
+      <Navbar />
 
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-black/60"></div>
+      {/* 🌿 HERO SECTION */}
+      <section className="relative h-screen w-full overflow-hidden">
+        {/* Background Image with Parallax Effect */}
+        <div
+          className="absolute inset-0 h-full w-full bg-cover bg-center transition-all duration-1000 transform scale-105"
+          style={{
+            backgroundImage: `url(${sliderImages[currentSlide].image})`,
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/30 dark:via-black/50 to-white dark:to-[#111111]"></div>
+        </div>
 
-          {/* Hero Content */}
-          <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
-            <h1 className="text-4xl md:text-6xl text-white font-extrabold drop-shadow-lg leading-snug">
-              {sliderImages[currentSlide].title}
-            </h1>
+        {/* Hero Content */}
+        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6 max-w-5xl mx-auto">
+          <div className="w-24 h-1 bg-[#D4AF37] mb-8 animate-pulse"></div>
+          <h1 className="text-5xl md:text-7xl font-bold text-[#D4AF37] drop-shadow-2xl leading-tight font-serif tracking-tight mb-6 animate-fadeIn">
+            {sliderImages[currentSlide].title}
+          </h1>
 
-            <p className="mt-6 text-lg md:text-2xl text-gray-200 max-w-3xl leading-relaxed drop-shadow-xl">
-              {sliderImages[currentSlide].message}
-            </p>
+          <p className="text-xl md:text-2xl text-gray-100 dark:text-gray-300 max-w-3xl leading-relaxed drop-shadow-lg font-light mb-10">
+            {sliderImages[currentSlide].message}
+          </p>
+
+          <div className="flex gap-6">
+            <Link to="/register" className="px-8 py-4 bg-[#D4AF37] text-black font-bold uppercase tracking-widest hover:bg-[#c5a059] transition-all transform hover:-translate-y-1 shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+              Get Started
+            </Link>
+            <Link to="/about" className="px-8 py-4 border border-[#D4AF37] text-[#D4AF37] font-bold uppercase tracking-widest hover:bg-[#D4AF37] hover:text-black transition-all transform hover:-translate-y-1">
+              Learn More
+            </Link>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* 🌿 SOCIAL MESSAGE SECTION (Bright + Animated) */}
-        <section className="relative py-20 bg-gradient-to-b from-blue-50 via-white to-blue-100">
-          <div className="container mx-auto px-6">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-center text-gray-900 mb-8 animate-fadeIn">
-              Justice Is Everyone’s Right —{" "}
-              <span className="text-blue-600">Not a Luxury</span>
+      {/* 🌿 MISSION SECTION */}
+      <section className="relative py-24 bg-white dark:bg-[#111111] transition-colors">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-[#f0f0f0] mb-4 font-serif transition-colors min-h-[80px] md:min-h-[120px] flex items-center justify-center">
+              <span>
+                {typingText.replace(/\.$/, '')}
+                {typingText.endsWith('.') && <span className="text-[#D4AF37]">.</span>}
+              </span>
+              <span className="text-[#D4AF37] animate-pulse ml-1">|</span>
             </h2>
+            <div className="w-24 h-1 bg-[#D4AF37] mx-auto"></div>
+          </div>
 
-            <p className="text-lg text-gray-700 text-center max-w-4xl mx-auto leading-relaxed animate-fadeIn delay-200">
-              Millions silently face injustice — wrongful arrests, domestic
-              violence, exploitation and discrimination. Our mission is to bring
-              citizens, lawyers and NGOs together to create a fairer, safer,
-              more compassionate society.
+          <p className="text-xl text-gray-600 dark:text-gray-400 text-center max-w-4xl mx-auto leading-relaxed mb-16 font-light transition-colors">
+            Millions silently face injustice — wrongful arrests, domestic violence, and discrimination.
+            Our mission is to bring <span className="text-[#D4AF37] font-medium">citizens, lawyers, and NGOs</span> together.
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { title: "Wrongful Arrests", desc: "We help individuals who were unfairly detained connect with immediate legal support.", icon: "⚖️" },
+              { title: "Domestic Violence", desc: "Survivors deserve protection. We connect them with NGOs and trusted legal experts.", icon: "💚" },
+              { title: "Human Rights", desc: "From discrimination to violence — we support communities fighting for their dignity.", icon: "🛑" }
+            ].map((item, idx) => (
+              <div key={idx} className="group p-8 rounded-none border border-gray-100 dark:border-[#333] bg-gray-50 dark:bg-[#1a1a1a] hover:border-[#D4AF37] transition-all duration-300 hovered-card relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-[#D4AF37] opacity-5 rounded-bl-full transition-all group-hover:scale-150"></div>
+                <div className="text-4xl mb-6">{item.icon}</div>
+                <h3 className="text-2xl font-bold text-[#D4AF37] mb-4 font-serif">{item.title}</h3>
+                <p className="text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-gray-300 transition-colors leading-relaxed transition-colors">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 🌿 ROLES SECTION */}
+      <section className="py-24 bg-gray-50 dark:bg-[#0a0a0a] relative transition-colors">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+        <div className="container mx-auto px-6 relative z-10">
+          <h2 className="text-4xl md:text-5xl font-bold text-center text-gray-900 dark:text-white mb-16 font-serif min-h-[60px] md:min-h-[80px] flex items-center justify-center">
+            <span>{ecosystemTypingText}</span>
+            <span className="text-[#D4AF37] animate-pulse">|</span>
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Citizens */}
+            <div className="relative group overflow-hidden shadow-2xl">
+              <div className="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition-all z-10"></div>
+              <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop" className="w-full h-[500px] object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="Citizen" />
+              <div className="absolute bottom-0 left-0 p-8 z-20 w-full bg-gradient-to-t from-black to-transparent">
+                <h3 className="text-3xl font-bold text-[#D4AF37] mb-2 font-serif">Citizens</h3>
+                <p className="text-gray-300 mb-4 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                  Get verified legal guidance and document assistance securely.
+                </p>
+                <Link to="/register" className="inline-flex items-center text-[#D4AF37] font-bold uppercase tracking-widest text-sm hover:text-white transition-colors">
+                  Join as Citizen <FiArrowRight className="ml-2" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Lawyers */}
+            <div className="relative group overflow-hidden shadow-2xl">
+              <div className="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition-all z-10"></div>
+              <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=2664&auto=format&fit=crop" className="w-full h-[500px] object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="Lawyer" />
+              <div className="absolute bottom-0 left-0 p-8 z-20 w-full bg-gradient-to-t from-black to-transparent">
+                <h3 className="text-3xl font-bold text-[#D4AF37] mb-2 font-serif">Lawyers</h3>
+                <p className="text-gray-300 mb-4 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                  Take up pro-bono cases and empower the vulnerable.
+                </p>
+                <Link to="/register" className="inline-flex items-center text-[#D4AF37] font-bold uppercase tracking-widest text-sm hover:text-white transition-colors">
+                  Join as Lawyer <FiArrowRight className="ml-2" />
+                </Link>
+              </div>
+            </div>
+
+            {/* NGOs */}
+            <div className="relative group overflow-hidden shadow-2xl">
+              <div className="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition-all z-10"></div>
+              <img src="https://images.unsplash.com/photo-1593113598332-cd288d649433?q=80&w=2070&auto=format&fit=crop" className="w-full h-[500px] object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="NGO" />
+              <div className="absolute bottom-0 left-0 p-8 z-20 w-full bg-gradient-to-t from-black to-transparent">
+                <h3 className="text-3xl font-bold text-[#D4AF37] mb-2 font-serif">NGOs</h3>
+                <p className="text-gray-300 mb-4 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                  Verify cases and provide on-ground social support.
+                </p>
+                <Link to="/register" className="inline-flex items-center text-[#D4AF37] font-bold uppercase tracking-widest text-sm hover:text-white transition-colors">
+                  Join as NGO <FiArrowRight className="ml-2" />
+                </Link>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* 🌿 FOOTER */}
+      <footer className="bg-gray-100 dark:bg-black text-gray-600 dark:text-gray-500 py-16 border-t border-gray-200 dark:border-[#222] transition-colors">
+        <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 flex items-center justify-center border border-[#D4AF37] rounded-full">
+                <span className="text-xl">⚖️</span>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white font-serif transition-colors">AdvoCare</h2>
+            </div>
+            <p className="leading-relaxed text-sm transition-colors">
+              We believe justice is a right, not a privilege. Our mission is to connect citizens, lawyers, and NGOs to make legal help accessible.
             </p>
-
-            {/* Cards */}
-            <div className="grid md:grid-cols-3 gap-10 mt-14">
-              {/* Card 1 */}
-              <div className="p-8 rounded-2xl bg-white shadow-lg border border-blue-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 animate-slideUp">
-                <h3 className="text-2xl font-bold text-blue-700">
-                  ⚖️ Wrongful Arrests
-                </h3>
-                <p className="mt-4 text-gray-600">
-                  We help individuals who were unfairly detained or charged by
-                  connecting them with immediate legal support.
-                </p>
-              </div>
-
-              {/* Card 2 */}
-              <div className="p-8 rounded-2xl bg-white shadow-lg border border-green-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 animate-slideUp delay-150">
-                <h3 className="text-2xl font-bold text-green-700">
-                  💚 Domestic Violence
-                </h3>
-                <p className="mt-4 text-gray-600">
-                  Survivors deserve protection, guidance and justice. We connect
-                  them with NGOs and trusted legal experts.
-                </p>
-              </div>
-
-              {/* Card 3 */}
-              <div className="p-8 rounded-2xl bg-white shadow-lg border border-red-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 animate-slideUp delay-300">
-                <h3 className="text-2xl font-bold text-red-700">
-                  🛑 Human Rights Abuse
-                </h3>
-                <p className="mt-4 text-gray-600">
-                  From discrimination to violence — we support communities
-                  fighting for their dignity and fundamental rights.
-                </p>
-              </div>
-            </div>
           </div>
-        </section>
 
-        {/* 🌿 SERVICE CARDS SECTION — NEW & IMPROVED */}
-        <section className="py-24 bg-gradient-to-b from-white to-green-50">
-          <div className="container mx-auto px-6">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-center text-gray-900 mb-10 animate-fadeIn">
-              How We Support Every Step of Justice
-            </h2>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 uppercase tracking-wider transition-colors">Quick Links</h3>
+            <ul className="space-y-3 text-sm">
+              <li><Link className="hover:text-[#D4AF37] transition-colors" to="/">Home</Link></li>
+              <li><Link className="hover:text-[#D4AF37] transition-colors" to="/about">About Us</Link></li>
+              <li><Link className="hover:text-[#D4AF37] transition-colors" to="/services">Services</Link></li>
+              <li><Link className="hover:text-[#D4AF37] transition-colors" to="/contact">Contact</Link></li>
+            </ul>
+          </div>
 
-            <p className="text-center text-lg text-gray-600 max-w-3xl mx-auto mb-16">
-              Our platform bridges citizens, pro bono lawyers, and NGOs to build
-              a safer, fairer society — one verified case at a time. 🌿
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 uppercase tracking-wider transition-colors">Get Help</h3>
+            <ul className="space-y-3 text-sm">
+              <li><Link className="hover:text-[#D4AF37] transition-colors" to="/register">Register</Link></li>
+              <li><Link className="hover:text-[#D4AF37] transition-colors" to="/login">Login</Link></li>
+              <li><Link className="hover:text-[#D4AF37] transition-colors" to="/faq">FAQ</Link></li>
+              <li><Link className="hover:text-[#D4AF37] transition-colors" to="/support">Support</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 uppercase tracking-wider transition-colors">Connect</h3>
+            <div className="flex space-x-4">
+              {['Twitter', 'LinkedIn', 'Instagram'].map(social => (
+                <a key={social} href="#" className="w-10 h-10 border border-gray-200 dark:border-[#333] flex items-center justify-center rounded-full hover:bg-[#D4AF37] hover:text-white dark:hover:text-black hover:border-[#D4AF37] transition-all transition-colors">
+                  {social[0]}
+                </a>
+              ))}
+            </div>
+            <p className="mt-6 text-xs transition-colors">
+              © {new Date().getFullYear()} AdvoCare.<br />All Rights Reserved.
             </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-              {/* Citizens */}
-              <div
-                className="relative bg-white/70 backdrop-blur-xl border border-green-200 rounded-3xl 
-          shadow-xl hover:shadow-3xl hover:-translate-y-3 hover:rotate-1 transition-all duration-500 p-8 animate-slideUp"
-              >
-                <div className="absolute -top-6 left-6 bg-green-600 text-white px-4 py-1 rounded-full shadow-lg text-sm tracking-wide">
-                  Citizens
-                </div>
-
-                <img
-                  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCA7R-zr5mHHCX6CdFFzGoC9dBIKnfVKi0dg&s"
-                  className="h-56 w-full object-cover rounded-2xl mb-6 shadow-sm"
-                />
-
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Guidance for Every Citizen
-                </h3>
-
-                <p className="text-gray-700 mt-3">
-                  From domestic issues to cybercrime — citizens receive verified
-                  legal guidance, document assistance, and NGO support tailored
-                  to their case.
-                </p>
-
-                <ul className="mt-5 text-gray-700 space-y-2 text-sm">
-                  <li>• Upload case details securely</li>
-                  <li>• Receive matched legal experts instantly</li>
-                  <li>• Track your case through a personalized dashboard</li>
-                </ul>
-              </div>
-
-              {/* Lawyers */}
-              <div
-                className="relative bg-white/70 backdrop-blur-xl border border-blue-200 rounded-3xl 
-          shadow-xl hover:shadow-3xl hover:-translate-y-3 hover:-rotate-1 transition-all duration-500 p-8 animate-slideUp delay-200"
-              >
-                <div className="absolute -top-6 left-6 bg-blue-600 text-white px-4 py-1 rounded-full shadow-lg text-sm tracking-wide">
-                  Lawyers
-                </div>
-
-                <img
-                  src="https://www.lawpreptutorial.com/blog/wp-content/uploads/2024/05/karuna-nundy.jpg"
-                  className="h-56 w-full object-cover rounded-2xl mb-6 shadow-sm"
-                />
-
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Support from Pro Bono Lawyers
-                </h3>
-
-                <p className="text-gray-700 mt-3">
-                  Verified advocates take up meaningful cases, empowering
-                  vulnerable groups and strengthening access to justice.
-                </p>
-
-                <ul className="mt-5 text-gray-700 space-y-2 text-sm">
-                  <li>• Work on high-impact pro bono cases</li>
-                  <li>• Secure document exchange and chat with citizens</li>
-                  <li>• Manage cases through a dedicated lawyer dashboard</li>
-                </ul>
-              </div>
-
-              {/* NGOs */}
-              <div
-                className="relative bg-white/70 backdrop-blur-xl border border-indigo-200 rounded-3xl 
-          shadow-xl hover:shadow-3xl hover:-translate-y-3 hover:rotate-1 transition-all duration-500 p-8 animate-slideUp delay-300"
-              >
-                <div className="absolute -top-6 left-6 bg-indigo-600 text-white px-4 py-1 rounded-full shadow-lg text-sm tracking-wide">
-                  NGOs
-                </div>
-
-                <img
-                  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaGeBlODmjwVUMF47IA4F0YDEuj7igdpnVTw&s"
-                  className="h-56 w-full object-cover rounded-2xl mb-6 shadow-sm"
-                />
-
-                <h3 className="text-2xl font-bold text-gray-900">
-                  NGOs Empowering Justice
-                </h3>
-
-                <p className="text-gray-700 mt-3">
-                  Partner NGOs help verify cases, offer social support, and
-                  coordinate with lawyers to ensure citizens receive complete
-                  protection.
-                </p>
-
-                <ul className="mt-5 text-gray-700 space-y-2 text-sm">
-                  <li>• Case verification & community outreach</li>
-                  <li>• Provide counselling and on-ground assistance</li>
-                  <li>• Monitor progress through impact dashboards</li>
-                </ul>
-              </div>
-            </div>
           </div>
-        </section>
-
-        {/* 🌿 FOOTER */}
-        <footer className="bg-gray-900 text-gray-300 py-12 mt-16">
-          <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-10">
-            <div>
-              <h2 className="text-2xl font-extrabold text-white">
-                AdvoCare 🌿
-              </h2>
-              <p className="mt-4 text-gray-400">
-                We believe justice is a right, not a privilege. Our mission is
-                to connect citizens, lawyers, and NGOs to make legal help
-                accessible.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold text-white mb-4">
-                Quick Links
-              </h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link className="hover:text-white" to="/">
-                    Home
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:text-white" to="/about">
-                    About Us
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:text-white" to="/services">
-                    Our Services
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:text-white" to="/contact">
-                    Contact
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold text-white mb-4">
-                Get Help
-              </h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link className="hover:text-white" to="/register">
-                    Register
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:text-white" to="/login">
-                    Login
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:text-white" to="/faq">
-                    FAQ
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:text-white" to="/support">
-                    Support
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold text-white mb-4">
-                Stay Connected
-              </h3>
-              <p className="text-gray-400 mb-4">
-                Follow us for updates & awareness.
-              </p>
-              <div className="flex space-x-4 text-2xl">
-                <a href="#" className="hover:text-white">
-                  📘
-                </a>
-                <a href="#" className="hover:text-white">
-                  🐦
-                </a>
-                <a href="#" className="hover:text-white">
-                  📸
-                </a>
-                <a href="#" className="hover:text-white">
-                  🎥
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-700 mt-12 pt-6 text-center text-gray-400">
-            © {new Date().getFullYear()} AdvoCare. All Rights Reserved.
-          </div>
-        </footer>
-      </div>
-    </>
+        </div>
+      </footer>
+    </div>
   );
 }

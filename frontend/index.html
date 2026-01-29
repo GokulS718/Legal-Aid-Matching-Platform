@@ -5,10 +5,18 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-      <link href="/src/style.css" rel="stylesheet">
     <title>legal-aid-frontend</title>
   </head>
   <body>
+    <script>
+      // Polyfill for Node.js global variable (required by sockjs-client)
+      if (typeof global === 'undefined') {
+        var global = globalThis;
+      }
+      if (typeof window !== 'undefined') {
+        window.global = globalThis;
+      }
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
