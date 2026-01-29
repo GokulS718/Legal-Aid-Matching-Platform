@@ -70,6 +70,8 @@ export default function CitizenDashboard() {
     password: "",
     photo: null,
     photoUrl: reduxProfile?.photoUrl || null,
+    latitude: reduxProfile?.latitude || null,
+    longitude: reduxProfile?.longitude || null,
     initialAppointmentData: null, // For pre-filling appointment form
   });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -359,6 +361,7 @@ export default function CitizenDashboard() {
                 onBookAppointment={handleBookAppointment}
                 onBack={() => setActivePage("cases")}
                 appointments={appointments}
+                citizenProfile={profile}
               />
             )}
 

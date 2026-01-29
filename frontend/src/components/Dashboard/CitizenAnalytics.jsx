@@ -5,6 +5,8 @@ import {
 } from 'recharts';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { getMyCases } from '../../api/caseApi';
+import { FiCheckCircle, FiFileText, FiCalendar, FiMapPin } from 'react-icons/fi';
 
 // API Configuration
 const API_BASE_URL = "http://localhost:8080/api";
@@ -12,6 +14,7 @@ const API_BASE_URL = "http://localhost:8080/api";
 export default function CitizenAnalytics({ profile }) {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [completedCases, setCompletedCases] = useState([]);
 
     useEffect(() => {
         // Get citizen ID from profile or localStorage
@@ -25,11 +28,28 @@ export default function CitizenAnalytics({ profile }) {
 
         if (citizenId) {
             fetchAnalytics();
+            fetchCompletedCases();
         } else {
             setLoading(false);
             console.warn("Profile ID not available:", profile);
         }
     }, [profile]);
+
+    const fetchCompletedCases = async () => {
+        try {
+            const res = await getMyCases();
+            const cases = res.data || [];
+            // Filter for completed/resolved cases
+            const completed = cases.filter(c => 
+                c.status === 'COMPLETED' || 
+                c.status === 'RESOLVED' || 
+                c.status === 'CLOSED'
+            );
+            setCompletedCases(completed);
+        } catch (error) {
+            console.error("Error fetching completed cases:", error);
+        }
+    };
 
     const fetchAnalytics = async () => {
         // Get citizen ID from profile or localStorage
@@ -363,6 +383,100 @@ export default function CitizenAnalytics({ profile }) {
                     </div>
                 </div>
             </div>
+
+            {/* Completed Cases Section */}
+            {completedCases.length > 0 && (
+                <div className="mt-8">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                            <FiCheckCircle className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Completed Cases</h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{completedCases.length} case(s) successfully resolved</p>
+                        </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {completedCases.map((caseItem) => (
+                            <div 
+                                key={caseItem.id} 
+                                className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all hover:border-green-400 dark:hover:border-green-600"
+                            >
+                                {/* Success Badge */}
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                                        <FiCheckCircle className="w-3 h-3" />
+                                        COMPLETED
+                                    </span>
+                                    <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                                        #{caseItem.id}
+                                    </span>
+                                </div>
+
+                                {/* Case Title */}
+                                <h4 className="font-bold text-gray-900 dark:text-white text-lg mb-2 line-clamp-1">
+                                    {caseItem.caseTitle || caseItem.title || "Untitled Case"}
+                                </h4>
+
+                                {/* Case Details */}
+                                <div className="space-y-2 mb-3">
+                                    {caseItem.caseType && (
+                                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                                            <FiFileText className="w-4 h-4 text-green-500" />
+                                            <span className="font-medium">{caseItem.caseType}</span>
+                                        </div>
+                                    )}
+                                    {caseItem.incidentPlace && (
+                                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                                            <FiMapPin className="w-4 h-4 text-green-500" />
+                                            <span className="truncate">{caseItem.incidentPlace}</span>
+                                        </div>
+                                    )}
+                                    {(caseItem.createdAt || caseItem.submittedAt) && (
+                                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                                            <FiCalendar className="w-4 h-4 text-green-500" />
+                                            <span>
+                                                {new Date(caseItem.createdAt || caseItem.submittedAt).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric'
+                                                })}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Description Preview */}
+                                {caseItem.description && (
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">
+                                        {caseItem.description}
+                                    </p>
+                                )}
+
+                                {/* Success Message */}
+                                <div className="pt-3 border-t border-green-200 dark:border-green-800">
+                                    <p className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                        </svg>
+                                        Successfully Resolved
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* No Completed Cases Message */}
+            {completedCases.length === 0 && (
+                <div className="mt-8 bg-gray-50 dark:bg-[#1a1a1a] rounded-xl p-8 border border-gray-200 dark:border-[#333] text-center">
+                    <FiCheckCircle className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                    <h3 className="text-lg font-bold text-gray-500 dark:text-gray-400 mb-2">No Completed Cases Yet</h3>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">Your completed cases will appear here once they are resolved.</p>
+                </div>
+            )}
         </div>
     );
 }

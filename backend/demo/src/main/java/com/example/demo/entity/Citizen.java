@@ -55,6 +55,14 @@ public class Citizen {
     @Column(name = "profile_photo_url", length = 500)
     private String profilePhotoUrl;
 
+    @JsonProperty("latitude")
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @JsonProperty("longitude")
+    @Column(name = "longitude")
+    private Double longitude;
+
     @Column(name = "enabled", nullable = false)
     private Boolean enabled = true;
 
@@ -161,5 +169,21 @@ public class Citizen {
 
     public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }

@@ -56,6 +56,8 @@ export const loginUser = createAsyncThunk(
             city: userData.city || null,
             address: userData.address || null,
             photoUrl: profilePhotoUrl, // Use extracted profilePhotoUrl
+            latitude: userData.latitude || null,
+            longitude: userData.longitude || null,
             role: response.data.role || credentials.role,
           },
         };
@@ -147,6 +149,8 @@ const initialState = {
     city: null,
     address: null,
     photoUrl: null,
+    latitude: null,
+    longitude: null,
     role: null,
   },
 
@@ -211,6 +215,8 @@ const authSlice = createSlice({
             city: action.payload.userData.city || null,
             address: action.payload.userData.address || null,
             photoUrl: action.payload.userData.photoUrl || null,
+            latitude: action.payload.userData.latitude || null,
+            longitude: action.payload.userData.longitude || null,
             role: action.payload.userData.role || action.payload.role || null,
           };
         }
@@ -250,6 +256,8 @@ const authSlice = createSlice({
           city: action.payload.city || null,
           address: action.payload.address || null,
           photoUrl: action.payload.photoUrl || null,
+          latitude: action.payload.latitude || null,
+          longitude: action.payload.longitude || null,
           role: action.payload.role || null,
         };
         state.error = null;
@@ -287,6 +295,8 @@ const authSlice = createSlice({
           city: null,
           address: null,
           photoUrl: null,
+          latitude: null,
+          longitude: null,
           role: null,
         };
         state.error = null;
