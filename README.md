@@ -60,7 +60,7 @@ HOW TO START FRONTEND (REACT + VITE)
 --------------------------------
 
 1. Open a new terminal
-2. Go to frontend directory:
+2. Go to frontend directory :
 
    cd frontend
 
