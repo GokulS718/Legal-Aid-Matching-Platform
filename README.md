@@ -46,7 +46,7 @@ HOW TO START BACKEND (SPRING BOOT)
 
    mvn spring-boot:run
 
-   OR (Windows Maven Wrapper):
+   OR (Windows Maven Wrapper) :
 
    mvnw.cmd spring-boot:run
 
@@ -64,15 +64,15 @@ HOW TO START FRONTEND (REACT + VITE)
 
    cd frontend
 
-3. Install dependencies:
+3. Install dependencies :
 
    npm install
 
-4. Start frontend server:
+4. Start frontend server :
 
    npm run dev
 
-5. Frontend will start on:
+5. Frontend will start on :
 
    http://localhost:5173
 
