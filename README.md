@@ -9,7 +9,7 @@ This is a full-stack application built using :
 The platform connects Citizens, Lawyers, and NGOs.
 
 --------------------------------
-PROJECT STRUCTURE
+PROJECT STRUCTURE 
 --------------------------------
 
 Legal-Aid-Matching-Platform-Group-A/
