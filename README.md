@@ -1,4 +1,4 @@
-LEGAL AID MATCHING PLATFORM
+LEGAL AID MATCHING PLATFORM 
 Backend + Frontend Setup Guide
 ================================
 
