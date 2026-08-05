@@ -50,7 +50,7 @@ HOW TO START BACKEND (SPRING BOOT)
 
    mvnw.cmd spring-boot:run
 
-4. Backend will start on:
+4. Backend will start on :
 
    http://localhost:8080
 
