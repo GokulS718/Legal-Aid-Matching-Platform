@@ -6,7 +6,7 @@ This is a full-stack application built using :
 - Spring Boot (Backend)
 - React with Vite (Frontend)
 
-The platform connects Citizens, Lawyers, and NGOs.
+The platform connects Citizens, Lawyers, and NGOs .
 
 --------------------------------
 PROJECT STRUCTURE 
