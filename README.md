@@ -42,7 +42,7 @@ HOW TO START BACKEND (SPRING BOOT)
 
    cd backend/demo 
 
-3. Run the application:
+3. Run the application :
 
    mvn spring-boot:run
 
