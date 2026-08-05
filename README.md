@@ -38,9 +38,9 @@ HOW TO START BACKEND (SPRING BOOT)
 --------------------------------
 
 1. Open terminal
-2. Go to backend directory:
+2. Go to backend directory :
 
-   cd backend/demo
+   cd backend/demo 
 
 3. Run the application:
 
