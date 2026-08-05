@@ -21,7 +21,7 @@ frontend/      -> React + Vite application
 
 
 --------------------------------
-PREREQUISITES 
+PREREQUISITES    
 --------------------------------
 
 Make sure the following are installed:
