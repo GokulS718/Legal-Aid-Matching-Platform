@@ -3,7 +3,7 @@ Backend + Frontend Setup Guide
 ================================
 
 This is a full-stack application built using :
-- Spring Boot (Backend)
+- Spring Boot (Backend) 
 - React with Vite (Frontend)
 
 The platform connects Citizens, Lawyers, and NGOs .
